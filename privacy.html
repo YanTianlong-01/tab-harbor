@@ -60,11 +60,8 @@
       justify-content: space-between;
       gap: 16px;
       margin-bottom: 28px;
-      padding: 10px 14px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 253, 249, 0.72);
-      backdrop-filter: blur(10px);
+      padding: 0 2px 12px;
+      border-bottom: 1px solid var(--line);
     }
 
     .brandmark {
@@ -116,44 +113,28 @@
     .topbar-links {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px 14px;
       justify-content: flex-end;
     }
 
     .topbar-link {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      min-height: 34px;
-      padding: 0 12px;
-      border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--accent-border) 68%, var(--card) 32%);
-      background: color-mix(in srgb, var(--accent-soft) 54%, var(--card) 46%);
       color: var(--accent);
       text-decoration: none;
       font-size: 12px;
       font-weight: 600;
+      letter-spacing: 0.01em;
     }
 
-    .topbar-link.is-primary {
-      background: color-mix(in srgb, var(--accent) 92%, var(--card) 8%);
-      border-color: color-mix(in srgb, var(--accent) 78%, var(--ink) 22%);
-      color: #fffaf5;
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 16%, transparent);
-    }
-
-    .topbar-link.is-primary:hover,
-    .topbar-link.is-primary:focus-visible {
-      background: color-mix(in srgb, var(--accent) 84%, var(--ink) 16%);
-      text-decoration: none;
+    .topbar-link + .topbar-link::before {
+      content: "/";
+      margin-right: 14px;
+      color: color-mix(in srgb, var(--muted) 76%, var(--paper) 24%);
     }
 
     .hero {
       padding: 6px 2px 28px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: end;
     }
 
     .eyebrow {
@@ -181,55 +162,41 @@
       color: color-mix(in srgb, var(--ink) 78%, var(--muted) 22%);
     }
 
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 10px;
-      align-self: start;
-    }
-
-    .hero-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 40px;
-      padding: 0 16px;
-      border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--accent-border) 74%, var(--card) 26%);
-      background: rgba(255, 253, 249, 0.88);
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 700;
-      text-decoration: none;
-      box-shadow: 0 10px 24px rgba(26, 22, 19, 0.06);
-    }
-
-    .hero-button.is-primary {
-      background: color-mix(in srgb, var(--accent-soft) 56%, var(--card) 44%);
-    }
-
-    .hero-button:hover,
-    .hero-button:focus-visible {
-      text-decoration: none;
-      background: color-mix(in srgb, var(--accent-soft) 68%, var(--card) 32%);
-      transform: translateY(-1px);
-    }
-
     .meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px 12px;
       margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.01em;
     }
 
-    .meta-chip {
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid color-mix(in srgb, var(--accent-border) 72%, var(--card) 28%);
-      background: color-mix(in srgb, var(--accent-soft) 62%, var(--card) 38%);
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .meta-item + .meta-item::before {
+      content: "";
+      width: 18px;
+      height: 1px;
+      background: rgba(212, 179, 150, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .hero-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin-top: 16px;
+    }
+
+    .hero-link {
       color: var(--accent);
-      font-size: 12px;
+      text-decoration: none;
+      font-size: 13px;
       font-weight: 600;
     }
 
@@ -352,21 +319,36 @@
     }
 
     .footer {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px 18px;
-      margin-top: 22px;
-      padding: 0 4px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px 20px;
+      margin-top: 26px;
+      padding: 16px 4px 0;
+      border-top: 1px solid rgba(212, 179, 150, 0.2);
       color: var(--muted);
       font-size: 12px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .footer-title {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .footer-links {
       display: flex;
       flex-wrap: wrap;
       gap: 10px 14px;
+      justify-content: flex-end;
     }
 
     a {
@@ -379,14 +361,6 @@
     }
 
     @media (max-width: 900px) {
-      .hero {
-        grid-template-columns: 1fr;
-      }
-
-      .hero-actions {
-        justify-content: flex-start;
-      }
-
       .layout {
         grid-template-columns: 1fr;
       }
@@ -418,13 +392,20 @@
       }
 
       .topbar {
-        border-radius: 18px;
-        padding: 12px;
+        padding-bottom: 12px;
         align-items: flex-start;
         flex-direction: column;
       }
 
       .topbar-links {
+        justify-content: flex-start;
+      }
+
+      .footer {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-links {
         justify-content: flex-start;
       }
     }
@@ -443,28 +424,25 @@
         </span>
       </a>
       <div class="topbar-links">
-        <a class="topbar-link is-primary" href="https://github.com/V-IOLE-T/tab-harbor" target="_blank" rel="noreferrer">Back to project home</a>
+        <a class="topbar-link" href="https://github.com/V-IOLE-T/tab-harbor" target="_blank" rel="noreferrer">Back to project home</a>
         <a class="topbar-link" href="https://github.com/V-IOLE-T/tab-harbor/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Markdown</a>
       </div>
     </div>
 
     <header class="hero">
-      <div>
-        <p class="eyebrow">Tab Harbor</p>
-        <h1>Privacy Policy</h1>
-        <p class="subtitle">
-          Tab Harbor is a calmer Chrome new tab workspace for open tabs, quick links, saved reads, and lightweight todos.
-          This page explains what data the extension accesses, why it needs that data, and how that data is handled.
-        </p>
-        <div class="meta">
-          <span class="meta-chip">Last updated: 2026-04-18</span>
-          <span class="meta-chip">Local-first by default</span>
-          <span class="meta-chip">No remote code</span>
-        </div>
+      <p class="eyebrow">Tab Harbor</p>
+      <h1>Privacy Policy</h1>
+      <p class="subtitle">
+        Tab Harbor is a calmer Chrome new tab workspace for open tabs, quick links, saved reads, and lightweight todos.
+        This page explains what data the extension accesses, why it needs that data, and how that data is handled.
+      </p>
+      <div class="meta" aria-label="Policy metadata">
+        <span class="meta-item">Last updated: 2026-04-18</span>
+        <span class="meta-item">Local-first by default</span>
+        <span class="meta-item">No remote code</span>
       </div>
-      <div class="hero-actions">
-        <a class="hero-button is-primary" href="https://github.com/V-IOLE-T/tab-harbor" target="_blank" rel="noreferrer">Open project</a>
-        <a class="hero-button" href="#contact">Contact</a>
+      <div class="hero-links">
+        <a class="hero-link" href="#contact">Contact</a>
       </div>
     </header>
 
@@ -611,7 +589,11 @@
     </div>
 
     <footer class="footer">
-      <span>Tab Harbor privacy page for Chrome Web Store review and public reference.</span>
+      <div class="footer-brand">
+        <span class="footer-title">Tab Harbor</span>
+        <span>Privacy page for Chrome Web Store review and public reference.</span>
+        <span>Copyright © 2026 Tab Harbor. All rights reserved.</span>
+      </div>
       <div class="footer-links">
         <a href="https://github.com/V-IOLE-T/tab-harbor" target="_blank" rel="noreferrer">GitHub repository</a>
         <a href="https://github.com/V-IOLE-T/tab-harbor/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Source markdown</a>
