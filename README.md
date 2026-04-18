@@ -7,7 +7,7 @@
 Tab Harbor turns Chrome's new tab page into a place where you can keep working. You immediately see what is already open, which pages should be moved into read-later, and what still needs your attention.
 
 <p align="center">
-  <img src="assets/readme/feature-tabs.jpg" alt="Tab Harbor overview" width="760">
+  <img src="assets/readme/feature-tabs.png" alt="Tab Harbor overview" width="760">
 </p>
 
 ## ✨ Core Highlights
@@ -24,15 +24,15 @@ Tab Harbor turns Chrome's new tab page into a place where you can keep working. 
   <tr>
     <td width="33.33%" valign="top">
       <strong>Unified tab management</strong><br><br>
-      <img src="assets/readme/feature-tabs.jpg" alt="Tabs" width="100%">
+      <img src="assets/readme/feature-tabs.png" alt="Tabs" width="100%">
     </td>
     <td width="33.33%" valign="top">
       <strong>Saved reads</strong><br><br>
-      <img src="assets/readme/feature-saved-drawer.jpg" alt="Saved reads drawer" width="100%">
+      <img src="assets/readme/feature-saved-drawer.png" alt="Saved reads drawer" width="100%">
     </td>
     <td width="33.33%" valign="top">
       <strong>Todos and quick jumping</strong><br><br>
-      <img src="assets/readme/feature-todos.jpg" alt="Todos" width="100%">
+      <img src="assets/readme/feature-todos.png" alt="Todos" width="100%">
     </td>
   </tr>
 </table>
@@ -55,12 +55,12 @@ When you want the page to feel more like your own workspace, you can **switch th
 
 <table>
   <tr>
-    <td><img src="assets/readme/theme-warm-neutral.jpg" alt="warm neutral" width="100%"></td>
-    <td><img src="assets/readme/theme-soft-green.jpg" alt="soft green" width="100%"></td>
+    <td><img src="assets/readme/theme-warm-neutral.png" alt="warm neutral" width="100%"></td>
+    <td><img src="assets/readme/theme-soft-green.png" alt="soft green" width="100%"></td>
   </tr>
   <tr>
-    <td><img src="assets/readme/theme-soft-clay.jpg" alt="soft clay" width="100%"></td>
-    <td><img src="assets/readme/theme-custom-background.jpg" alt="custom background" width="100%"></td>
+    <td><img src="assets/readme/theme-soft-clay.png" alt="soft clay" width="100%"></td>
+    <td><img src="assets/readme/theme-custom-background.png" alt="custom background" width="100%"></td>
   </tr>
 </table>
 
