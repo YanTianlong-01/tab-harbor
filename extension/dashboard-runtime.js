@@ -1638,7 +1638,17 @@ document.addEventListener('click', async (e) => {
             state = result.state;
             group = result.group;
           } catch {
-            group = state.groups.find(g => g.name === name);
+            // Name collision — generate a unique suffix so distinct
+            // Chrome groups are never merged into one session group.
+            let suffix = 2;
+            let uniqueName = `${name} ${suffix}`;
+            while (state.groups.some(g => g.name.toLowerCase() === uniqueName.toLowerCase())) {
+              suffix++;
+              uniqueName = `${name} ${suffix}`;
+            }
+            const result = addSessionGroup(state, uniqueName);
+            state = result.state;
+            group = result.group;
           }
           if (group) {
             for (const tabId of tabIds) {
@@ -1656,7 +1666,7 @@ document.addEventListener('click', async (e) => {
         }
         if (mappings.length > 0) {
           await saveSessionGroups(state);
-          populateChromeGroupMap(mappings);
+          await populateChromeGroupMap(mappings);
           if (typeof setImportMode === 'function') setImportMode(true);
         }
       }
@@ -1664,6 +1674,7 @@ document.addEventListener('click', async (e) => {
 
     await saveChromeTabGroupsSetting(nextEnabled);
     chromeTabGroupsEnabled = nextEnabled;
+    if (typeof setThemeMenuOpen === 'function') setThemeMenuOpen(false);
     await renderDashboard();
     if (typeof setImportMode === 'function') setImportMode(false);
     showToast(nextEnabled ? (runtimeT ? runtimeT('toastChromeTabGroupsOn') : 'Chrome tab groups on') : (runtimeT ? runtimeT('toastChromeTabGroupsOff') : 'Chrome tab groups off'));

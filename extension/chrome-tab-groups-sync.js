@@ -3,6 +3,7 @@
 (function attachChromeTabGroups(globalScope) {
 
   const STORAGE_KEY = 'chromeTabGroupsEnabled';
+  const MAP_PERSIST_KEY = 'chromeTabGroupsMap';
 
   let cachedEnabled = false;
   let chromeGroupMap = {};
@@ -34,6 +35,7 @@
     } catch {
       cachedEnabled = false;
     }
+    await loadPersistedChromeGroupMap();
     return cachedEnabled;
   }
 
@@ -41,6 +43,21 @@
     cachedEnabled = Boolean(enabled);
     await chrome.storage.local.set({ [STORAGE_KEY]: cachedEnabled });
     return cachedEnabled;
+  }
+
+  async function persistChromeGroupMap() {
+    try {
+      await chrome.storage.local.set({ [MAP_PERSIST_KEY]: chromeGroupMap });
+    } catch {}
+  }
+
+  async function loadPersistedChromeGroupMap() {
+    try {
+      const result = await chrome.storage.local.get(MAP_PERSIST_KEY);
+      if (result[MAP_PERSIST_KEY]) {
+        chromeGroupMap = result[MAP_PERSIST_KEY];
+      }
+    } catch {}
   }
 
   function isChromeApiAvailable() {
@@ -77,9 +94,12 @@
       await ungroupTabs(allTrackedTabIds);
     }
     chromeGroupMap = {};
+    await persistChromeGroupMap();
   }
 
   async function syncChromeTabGroups(domainGroups) {
+    await loadPersistedChromeGroupMap();
+
     if (!cachedEnabled) {
       await removeAllChromeGroups();
       return;
@@ -156,8 +176,11 @@
             // Some tabs may have valid IDs but fail grouping; try one by one
             for (const tabId of tabIds) {
               try {
-                const gid = await chrome.tabs.group({ tabIds: tabId });
-                if (chromeGroupId == null) chromeGroupId = gid;
+                if (chromeGroupId == null) {
+                  chromeGroupId = await chrome.tabs.group({ tabIds: tabId });
+                } else {
+                  await chrome.tabs.group({ groupId: chromeGroupId, tabIds: tabId });
+                }
               } catch {}
             }
           }
@@ -181,11 +204,16 @@
         }
       }
     }
+    await persistChromeGroupMap();
   }
 
-  function resetChromeGroupState() {
+  async function resetChromeGroupState() {
     chromeGroupMap = {};
     cachedEnabled = false;
+    importMode = false;
+    try {
+      await chrome.storage.local.remove(MAP_PERSIST_KEY);
+    } catch {}
   }
 
   function isChromeTabGroupsEnabled() {
@@ -196,11 +224,12 @@
     return Object.keys(chromeGroupMap).length;
   }
 
-  function populateChromeGroupMap(mappings) {
+  async function populateChromeGroupMap(mappings) {
     for (const { virtualGroupKey, windowId, chromeGroupId } of mappings) {
       if (!chromeGroupMap[virtualGroupKey]) chromeGroupMap[virtualGroupKey] = {};
       chromeGroupMap[virtualGroupKey][windowId] = chromeGroupId;
     }
+    await persistChromeGroupMap();
   }
 
   async function queryExistingChromeGroups() {
