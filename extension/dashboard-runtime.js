@@ -1326,8 +1326,8 @@ async function renderStaticDashboard() {
 
   if (domainGroups.length > 0 && openTabsSection) {
     if (openTabsSectionTitle) openTabsSectionTitle.textContent = 'Open tabs';
-    openTabsSectionCount.innerHTML = `<span class="section-summary">${realTabs.length} tab${realTabs.length !== 1 ? 's' : ''} across ${domainGroups.length} group${domainGroups.length !== 1 ? 's' : ''}</span><button class="action-btn close-tabs section-action" type="button" data-action="close-all-open-tabs">${ICONS.close} Close all tabs</button>`;
-    openTabsMissionsEl.innerHTML = domainGroups.map(g => renderDomainCard(g)).join('');
+    if (openTabsSectionCount) openTabsSectionCount.innerHTML = `<span class="section-summary">${realTabs.length} tab${realTabs.length !== 1 ? 's' : ''} across ${domainGroups.length} group${domainGroups.length !== 1 ? 's' : ''}</span><button class="action-btn close-tabs section-action" type="button" data-action="close-all-open-tabs">${ICONS.close} Close all tabs</button>`;
+    if (openTabsMissionsEl) openTabsMissionsEl.innerHTML = domainGroups.map(g => renderDomainCard(g)).join('');
     if (openTabsGroupNav) {
       openTabsGroupNav.innerHTML = renderGroupNavArea(domainGroups);
       openTabsGroupNav.style.display = 'flex';
@@ -1338,7 +1338,9 @@ async function renderStaticDashboard() {
       openTabsGroupNav.innerHTML = '';
       openTabsGroupNav.style.display = 'none';
     }
-    openTabsSection.style.display = 'none';
+    openTabsSection.style.display = 'block';
+    if (openTabsMissionsEl) openTabsMissionsEl.innerHTML = renderMissionsEmptyState();
+    if (openTabsSectionCount) openTabsSectionCount.textContent = '0 domains';
   }
 
   // --- Footer stats ---
