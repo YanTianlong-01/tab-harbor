@@ -1,6 +1,10 @@
 'use strict';
 
 const {
+  t: themeT,
+} = globalThis.TabHarborI18n || {};
+
+const {
   escapeHtmlAttribute: themeEscapeHtmlAttribute,
   getFallbackLabel: themeGetFallbackLabel,
   getIconSources: themeGetIconSources,
@@ -305,7 +309,9 @@ function renderThemeMenu() {
   transparencyRange.value = String(themePreferences.surfaceOpacity);
   transparencyValue.textContent = `${themePreferences.surfaceOpacity}%`;
   if (pinToggle && typeof groupOrderState !== 'undefined') {
-    const pinTooltip = groupOrderState.pinEnabled ? 'Pinned order' : 'Pin order';
+    const pinTooltip = groupOrderState.pinEnabled
+      ? (themeT ? themeT('pinnedOrder') : 'Pinned order')
+      : (themeT ? themeT('pinOrder') : 'Pin order');
     pinToggle.classList.toggle('is-active', groupOrderState.pinEnabled);
     pinToggle.dataset.tooltip = pinTooltip;
     pinToggle.setAttribute('aria-label', pinTooltip);
@@ -470,7 +476,9 @@ function syncShortcutEditor() {
 
   elements.panel.hidden = !shortcutEditorState.open;
   elements.backdrop.hidden = !shortcutEditorState.open;
-  elements.title.textContent = shortcutEditorState.mode === 'edit' ? 'Edit shortcut' : 'Add shortcut';
+  elements.title.textContent = shortcutEditorState.mode === 'edit'
+    ? (themeT ? themeT('shortcutEditTitle') : 'Edit shortcut')
+    : (themeT ? themeT('shortcutAddTitle') : 'Add shortcut');
   elements.url.value = shortcutEditorState.url;
   elements.label.value = shortcutEditorState.label;
   elements.sourceButtons.forEach(button => {
@@ -486,17 +494,17 @@ function syncShortcutEditor() {
   if (elements.imageGroup) elements.imageGroup.hidden = shortcutEditorState.iconKind !== 'image';
   if (elements.svgGroup) elements.svgGroup.hidden = shortcutEditorState.iconKind !== 'svg';
 
-  const label = shortcutEditorState.label.trim() || shortcutEditorState.url.trim() || 'Shortcut';
+  const label = shortcutEditorState.label.trim() || shortcutEditorState.url.trim() || (themeT ? themeT('shortcutPreviewFallbackLabel') : 'Shortcut');
   const previewTitle = shortcutEditorState.iconKind === 'image'
-    ? 'Custom image icon'
+    ? (themeT ? themeT('shortcutPreviewCustomImageIcon') : 'Custom image icon')
     : shortcutEditorState.iconKind === 'svg'
-      ? 'SVG icon'
+      ? (themeT ? themeT('shortcutPreviewSvgIcon') : 'SVG icon')
     : shortcutEditorState.iconKind === 'glyph'
-      ? 'Emoji icon'
-      : 'Website icon';
+      ? (themeT ? themeT('shortcutPreviewEmojiIcon') : 'Emoji icon')
+      : (themeT ? themeT('shortcutPreviewWebsiteIcon') : 'Website icon');
   const previewMeta = shortcutEditorState.iconKind
-    ? 'Custom icon will replace the site favicon.'
-    : 'Upload or paste an image, or type an emoji.';
+    ? (themeT ? themeT('shortcutPreviewHasCustomIcon') : 'Custom icon will replace the site favicon.')
+    : (themeT ? themeT('shortcutPreviewNoCustomIcon') : 'Upload or paste an image, or type an emoji.');
 
   if (elements.previewTitle) elements.previewTitle.textContent = previewTitle;
   if (elements.previewMeta) elements.previewMeta.textContent = previewMeta;
@@ -590,7 +598,7 @@ function setShortcutEditorSource(source) {
 
 async function applyShortcutEditorImageFile(file) {
   if (!themeCompressImageFileForStorage) {
-    throw new Error('Image compression is unavailable');
+    throw new Error(themeT ? themeT('errorImageCompressionUnavailable') : 'Image compression is unavailable');
   }
   const dataUrl = await themeCompressImageFileForStorage(file, {
     maxBytes: 96 * 1024,
@@ -602,7 +610,7 @@ async function applyShortcutEditorImageFile(file) {
 async function saveShortcutEditorShortcut() {
   const url = normalizeShortcutUrl(shortcutEditorState.url);
   if (!url) {
-    throw new Error('Please enter a valid URL');
+    throw new Error(themeT ? themeT('errorPleaseEnterValidUrl') : 'Please enter a valid URL');
   }
 
   const shortcuts = await getQuickShortcuts();
@@ -864,10 +872,10 @@ function renderQuickShortcutCard(shortcut) {
         </span>
         <span class="quick-shortcut-label">${label}</span>
       </button>
-      <button class="quick-shortcut-edit" type="button" data-action="edit-quick-shortcut" data-shortcut-id="${safeId}" aria-label="Edit quick tab">
+      <button class="quick-shortcut-edit" type="button" data-action="edit-quick-shortcut" data-shortcut-id="${safeId}" aria-label="${themeT ? themeT('editQuickTab') : 'Edit quick tab'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a2.25 2.25 0 1 1 3.182 3.182L10.582 17.13a4.5 4.5 0 0 1-1.897 1.13L6 19l.74-2.685a4.5 4.5 0 0 1 1.13-1.897L16.862 4.487ZM19.5 7.125 16.875 4.5" /></svg>
       </button>
-      <button class="quick-shortcut-remove" type="button" data-action="remove-quick-shortcut" data-shortcut-id="${safeId}" aria-label="Remove quick tab">
+      <button class="quick-shortcut-remove" type="button" data-action="remove-quick-shortcut" data-shortcut-id="${safeId}" aria-label="${themeT ? themeT('removeQuickTab') : 'Remove quick tab'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
       </button>
     </div>
@@ -877,13 +885,13 @@ function renderQuickShortcutCard(shortcut) {
 function renderQuickShortcutAddCard() {
   return `
     <div class="quick-shortcut-card is-add">
-      <button class="quick-shortcut-open" type="button" data-action="add-quick-shortcut" aria-label="Add quick tab">
+      <button class="quick-shortcut-open" type="button" data-action="add-quick-shortcut" aria-label="${themeT ? themeT('addQuickTab') : 'Add quick tab'}">
         <span class="quick-shortcut-icon-wrap">
           <svg class="quick-shortcut-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25" />
           </svg>
         </span>
-        <span class="quick-shortcut-label">Add link</span>
+        <span class="quick-shortcut-label">${themeT ? themeT('addLink') : 'Add link'}</span>
       </button>
     </div>
   `;
@@ -910,7 +918,7 @@ async function handleShortcutEditorPaste() {
   }
 
   if (!navigator.clipboard?.read) {
-    showToast('Press Cmd/Ctrl+V inside the editor to paste an image or SVG');
+    showToast(themeT ? themeT('toastClipboardUsePasteShortcut') : 'Press Cmd/Ctrl+V inside the editor to paste an image or SVG');
     return;
   }
 
@@ -922,7 +930,7 @@ async function handleShortcutEditorPaste() {
       const blob = await item.getType(imageType);
       const file = new File([blob], 'shortcut-icon.png', { type: imageType });
       await applyShortcutEditorImageFile(file);
-      showToast('Shortcut icon pasted');
+      showToast(themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted');
       return;
     }
 
@@ -934,12 +942,14 @@ async function handleShortcutEditorPaste() {
       const normalized = extractIconFromClipboardHtml(html);
       if (normalized.kind) {
         setShortcutEditorIcon(normalized.value);
-        showToast(normalized.kind === 'svg' ? 'SVG icon pasted' : 'Shortcut icon pasted');
+        showToast(normalized.kind === 'svg'
+          ? (themeT ? themeT('toastSvgIconPasted') : 'SVG icon pasted')
+          : (themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted'));
         return;
       }
       const htmlImageMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
       if (htmlImageMatch?.[1] && isTransientClipboardReference(htmlImageMatch[1])) {
-        showToast('This clipboard image is a temporary file reference. Use Cmd/Ctrl+V instead.');
+        showToast(themeT ? themeT('toastClipboardTemporaryRef') : 'This clipboard image is a temporary file reference. Use Cmd/Ctrl+V instead.');
         return;
       }
     }
@@ -950,18 +960,20 @@ async function handleShortcutEditorPaste() {
       const normalized = normalizeShortcutIcon(text);
       if (normalized.kind === 'svg' || /^data:image\//i.test(String(normalized.value || ''))) {
         setShortcutEditorIcon(normalized.value);
-        showToast(normalized.kind === 'svg' ? 'SVG icon pasted' : 'Shortcut icon pasted');
+        showToast(normalized.kind === 'svg'
+          ? (themeT ? themeT('toastSvgIconPasted') : 'SVG icon pasted')
+          : (themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted'));
         return;
       }
       if (isTransientClipboardReference(text)) {
-        showToast('This clipboard image is a temporary file reference. Use Cmd/Ctrl+V instead.');
+        showToast(themeT ? themeT('toastClipboardTemporaryRef') : 'This clipboard image is a temporary file reference. Use Cmd/Ctrl+V instead.');
         return;
       }
     }
 
-    showToast('Clipboard does not contain an image or SVG');
+    showToast(themeT ? themeT('toastClipboardNoImage') : 'Clipboard does not contain an image or SVG');
   } catch (err) {
-    showToast('Use Cmd/Ctrl+V inside the editor if direct clipboard access is unavailable');
+    showToast(themeT ? themeT('toastClipboardUsePasteShortcut') : 'Use Cmd/Ctrl+V inside the editor if direct clipboard access is unavailable');
   }
 }
 
@@ -992,7 +1004,7 @@ async function tryShortcutEditorPasteViaExecCommand() {
           e.preventDefault();
           try {
             await applyShortcutEditorImageFile(file);
-            showToast('Shortcut icon pasted');
+            showToast(themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted');
             cleanup(true);
             return;
           } catch {
@@ -1007,7 +1019,9 @@ async function tryShortcutEditorPasteViaExecCommand() {
       if (normalizedFromHtml.kind) {
         e.preventDefault();
         setShortcutEditorIcon(normalizedFromHtml.value);
-        showToast(normalizedFromHtml.kind === 'svg' ? 'SVG icon pasted' : 'Shortcut icon pasted');
+        showToast(normalizedFromHtml.kind === 'svg'
+          ? (themeT ? themeT('toastSvgIconPasted') : 'SVG icon pasted')
+          : (themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted'));
         cleanup(true);
         return;
       }
@@ -1055,7 +1069,7 @@ document.addEventListener('click', async (e) => {
     const shortcuts = await getQuickShortcuts();
     await saveQuickShortcuts(shortcuts.filter(item => item.id !== shortcutId));
     await renderQuickShortcuts();
-    showToast('Quick tab removed');
+    showToast(themeT ? themeT('toastQuickTabRemoved') : 'Quick tab removed');
     return;
   }
 
@@ -1211,9 +1225,9 @@ document.addEventListener('change', async (e) => {
 
   try {
     await applyShortcutEditorImageFile(file);
-    showToast('Shortcut icon updated');
+    showToast(themeT ? themeT('toastShortcutIconUpdated') : 'Shortcut icon updated');
   } catch (err) {
-    showToast(err?.message || 'Could not use shortcut image');
+    showToast(err?.message || (themeT ? themeT('toastCouldNotUseShortcutImage') : 'Could not use shortcut image'));
   }
 });
 
@@ -1227,9 +1241,9 @@ document.addEventListener('paste', async (e) => {
     e.preventDefault();
     try {
       await applyShortcutEditorImageFile(file);
-      showToast('Shortcut icon pasted');
+      showToast(themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted');
     } catch (err) {
-      showToast(err?.message || 'Could not paste shortcut image');
+      showToast(err?.message || (themeT ? themeT('toastCouldNotPasteShortcutImage') : 'Could not paste shortcut image'));
     }
     return;
   }
@@ -1239,7 +1253,9 @@ document.addEventListener('paste', async (e) => {
   if (normalizedFromHtml.kind) {
     e.preventDefault();
     setShortcutEditorIcon(normalizedFromHtml.value);
-    showToast(normalizedFromHtml.kind === 'svg' ? 'SVG icon pasted' : 'Shortcut icon pasted');
+    showToast(normalizedFromHtml.kind === 'svg'
+      ? (themeT ? themeT('toastSvgIconPasted') : 'SVG icon pasted')
+      : (themeT ? themeT('toastShortcutIconPasted') : 'Shortcut icon pasted'));
     return;
   }
 
@@ -1248,7 +1264,7 @@ document.addEventListener('paste', async (e) => {
   if (normalized.kind === 'svg') {
     e.preventDefault();
     setShortcutEditorIcon(normalized.value);
-    showToast('SVG icon pasted');
+    showToast(themeT ? themeT('toastSvgIconPasted') : 'SVG icon pasted');
   }
 });
 
@@ -1259,9 +1275,11 @@ document.addEventListener('submit', async (e) => {
   try {
     const mode = shortcutEditorState.mode;
     await saveShortcutEditorShortcut();
-    showToast(mode === 'edit' ? 'Quick tab updated' : 'Quick tab added');
+    showToast(mode === 'edit'
+      ? (themeT ? themeT('toastQuickTabUpdated') : 'Quick tab updated')
+      : (themeT ? themeT('toastQuickTabAdded') : 'Quick tab added'));
   } catch (err) {
-    showToast(err?.message || 'Could not save shortcut');
+    showToast(err?.message || (themeT ? themeT('toastCouldNotSaveShortcut') : 'Could not save shortcut'));
   }
 });
 

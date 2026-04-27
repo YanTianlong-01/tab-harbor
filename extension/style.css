@@ -798,6 +798,40 @@ body.quick-shortcut-list-dragging .quick-shortcut-open {
   cursor: pointer;
 }
 
+/* ---- Language options ---- */
+.theme-language-options {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-language-option {
+  flex: 1 1 0;
+  border: 1px solid color-mix(in srgb, var(--workspace-accent-border) calc(var(--custom-border-opacity) + 4%), var(--warm-gray) 38%);
+  background: color-mix(in srgb, var(--card-bg) calc(var(--custom-surface-opacity) + 56%), transparent);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 7px 10px;
+  font-family: 'Public Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  min-height: 36px;
+  text-align: center;
+}
+
+.theme-language-option:hover {
+  border-color: var(--theme-accent-muted);
+  background: var(--theme-accent-soft);
+  color: var(--theme-accent-strong);
+}
+
+.theme-language-option.is-active {
+  border-color: color-mix(in srgb, var(--accent-amber) 32%, var(--warm-gray) 68%);
+  background: var(--theme-accent-soft);
+  color: var(--theme-accent-strong);
+}
+
 /* ---- Tab cleanup banner ---- */
 .tab-cleanup-banner {
   background: linear-gradient(
@@ -3140,6 +3174,7 @@ body.page-chip-list-dragging .chip-reorder-handle {
   .quick-shortcut-open,
   .quick-shortcut-remove,
   .tab-cleanup-btn,
+  .theme-language-option,
   .theme-menu-action,
   .theme-option,
   .theme-range,
