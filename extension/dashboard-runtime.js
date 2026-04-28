@@ -1794,9 +1794,19 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'select-theme') {
     const themeId = actionEl.dataset.themeId || 'paper';
-    await saveThemePreferences({ themeId });
+    await saveThemePreferences({ themeId, followSystemDark: false });
     setThemeMenuOpen(false, { restoreFocus: true });
     showToast(runtimeT ? runtimeT('toastThemeUpdated') : 'Theme updated');
+    return;
+  }
+
+  if (action === 'toggle-follow-system') {
+    const nextFollowSystem = !themePreferences.followSystemDark;
+    await saveThemePreferences({ followSystemDark: nextFollowSystem });
+    setThemeMenuOpen(false, { restoreFocus: true });
+    showToast(nextFollowSystem
+      ? (runtimeT ? runtimeT('toastFollowSystemOn') : 'Following system theme')
+      : (runtimeT ? runtimeT('toastFollowSystemOff') : 'Manual theme selected'));
     return;
   }
 

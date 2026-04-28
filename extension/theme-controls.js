@@ -195,6 +195,7 @@ let themePreferences = {
   themeId: 'paper',
   customBackground: '',
   surfaceOpacity: 14,
+  followSystemDark: false,
 };
 
 function normalizeThemePreferences(input) {
@@ -204,10 +205,12 @@ function normalizeThemePreferences(input) {
   const surfaceOpacity = Number.isFinite(rawOpacity)
     ? Math.min(60, Math.max(2, Math.round(rawOpacity)))
     : 14;
+  const followSystemDark = Boolean(next.followSystemDark);
   return {
     themeId: THEMES[themeId] ? themeId : 'paper',
     customBackground: typeof next.customBackground === 'string' ? next.customBackground : '',
     surfaceOpacity,
+    followSystemDark,
   };
 }
 
@@ -280,6 +283,65 @@ function getThemeDefinition(themeId) {
 
 function prefersReducedMotion() {
   return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+}
+
+function isSystemDarkMode() {
+  return Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+}
+
+function getLightThemeIdForDarkTheme(darkThemeId) {
+  const mapping = {
+    darkPaper: 'paper',
+    darkMist: 'mist',
+  };
+  return mapping[darkThemeId] || 'paper';
+}
+
+function getDarkThemeIdForLightTheme(lightThemeId) {
+  const mapping = {
+    paper: 'darkPaper',
+    mist: 'darkMist',
+    sage: 'darkPaper',
+    blush: 'darkPaper',
+  };
+  return mapping[lightThemeId] || 'darkPaper';
+}
+
+function maybeApplySystemDarkMode() {
+  if (!themePreferences.followSystemDark) return;
+  const systemDark = isSystemDarkMode();
+  const currentThemeIsDark = themePreferences.themeId.startsWith('dark');
+
+  if (systemDark && !currentThemeIsDark) {
+    // System is dark, but current theme is light — switch to dark
+    const darkThemeId = getDarkThemeIdForLightTheme(themePreferences.themeId);
+    themePreferences.themeId = darkThemeId;
+    applyThemePreferences();
+    renderThemeMenu();
+  } else if (!systemDark && currentThemeIsDark) {
+    // System is light, but current theme is dark — switch to light
+    const lightThemeId = getLightThemeIdForDarkTheme(themePreferences.themeId);
+    themePreferences.themeId = lightThemeId;
+    applyThemePreferences();
+    renderThemeMenu();
+  }
+}
+
+function subscribeToSystemColorScheme() {
+  const query = window.matchMedia('(prefers-color-scheme: dark)');
+  if (!query) return;
+
+  const handler = () => {
+    maybeApplySystemDarkMode();
+  };
+
+  // Modern browsers support addEventListener
+  if (query.addEventListener) {
+    query.addEventListener('change', handler);
+  } else {
+    // Fallback for older browsers
+    query.addListener(handler);
+  }
 }
 
 function focusFirstElement(container) {
@@ -396,7 +458,24 @@ function renderThemeMenu() {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" /></svg>
       </span>
     </button>
-  `).join('');
+  `).join('') + `
+    <button
+      class="theme-option ${themePreferences.followSystemDark ? 'is-active' : ''}"
+      type="button"
+      data-action="toggle-follow-system"
+      aria-pressed="${themePreferences.followSystemDark}"
+    >
+      <span class="theme-option-main">
+        <span class="theme-option-swatch theme-option-swatch-system" aria-hidden="true"></span>
+        <span>
+          <span class="theme-option-name">Follow System</span>
+        </span>
+      </span>
+      <span class="theme-option-check" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" /></svg>
+      </span>
+    </button>
+  `;
 }
 
 async function getQuickShortcuts() {
@@ -1872,6 +1951,13 @@ document.addEventListener('click', (e) => {
 async function loadThemePreferences() {
   const stored = await chrome.storage.local.get(THEME_PREFERENCES_KEY);
   themePreferences = normalizeThemePreferences(stored[THEME_PREFERENCES_KEY]);
+  
+  // Subscribe to system color scheme changes
+  subscribeToSystemColorScheme();
+  
+  // Apply system dark mode if enabled
+  maybeApplySystemDarkMode();
+  
   applyThemePreferences();
   renderThemeMenu();
   return themePreferences;
@@ -1883,6 +1969,12 @@ async function saveThemePreferences(nextPreferences) {
     ...nextPreferences,
   });
   await chrome.storage.local.set({ [THEME_PREFERENCES_KEY]: themePreferences });
+  
+  // If followSystemDark changed, apply immediately
+  if (nextPreferences.followSystemDark !== undefined) {
+    maybeApplySystemDarkMode();
+  }
+  
   applyThemePreferences();
   renderThemeMenu();
   return themePreferences;
