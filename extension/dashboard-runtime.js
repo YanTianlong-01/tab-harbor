@@ -1794,7 +1794,14 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'select-theme') {
     const themeId = actionEl.dataset.themeId || 'paper';
-    await saveThemePreferences({ themeId, followSystemDark: false });
+    const isDarkTheme = themeId.startsWith('dark');
+    const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const followSystemDark = themePreferences.followSystemDark;
+    
+    // 如果 Follow System 开启，且选择的主题与系统模式不匹配，则关闭 Follow System
+    const nextFollowSystemDark = followSystemDark && (isDarkTheme === systemIsDark);
+    
+    await saveThemePreferences({ themeId, followSystemDark: nextFollowSystemDark });
     setThemeMenuOpen(false, { restoreFocus: true });
     showToast(runtimeT ? runtimeT('toastThemeUpdated') : 'Theme updated');
     return;
