@@ -189,6 +189,50 @@ const THEMES = {
       '--card-bg': '#1c232b',
     },
   },
+  darkSage: {
+    name: 'Dark Sage',
+    meta: 'Green dark',
+    vars: {
+      '--ink': '#d8e3d7',
+      '--paper': '#172018',
+      '--warm-gray': '#252d25',
+      '--muted': '#6a7a6a',
+      '--accent-amber': '#9a8a5a',
+      '--accent-sage': '#6a9a7a',
+      '--accent-slate': '#6a7a8a',
+      '--accent-rose': '#9a7a7a',
+      '--workspace-accent': '#5a8a6a',
+      '--workspace-accent-soft': '#252d25',
+      '--workspace-accent-border': '#3a4a3a',
+      '--workspace-accent-contrast': '#eef2eb',
+      '--status-active': '#5a9a7a',
+      '--status-cooling': '#b89a4a',
+      '--status-abandoned': '#c36a6a',
+      '--card-bg': '#1e261e',
+    },
+  },
+  darkBlush: {
+    name: 'Dark Blush',
+    meta: 'Clay dark',
+    vars: {
+      '--ink': '#e8e2da',
+      '--paper': '#201716',
+      '--warm-gray': '#332a2a',
+      '--muted': '#8a7a7a',
+      '--accent-amber': '#a06d4f',
+      '--accent-sage': '#6a7a6a',
+      '--accent-slate': '#6a7a8a',
+      '--accent-rose': '#c37a7a',
+      '--workspace-accent': '#a5656f',
+      '--workspace-accent-soft': '#332a2a',
+      '--workspace-accent-border': '#5a4a4a',
+      '--workspace-accent-contrast': '#f6efec',
+      '--status-active': '#5a9a7a',
+      '--status-cooling': '#b89a4a',
+      '--status-abandoned': '#c36a6a',
+      '--card-bg': '#281f1f',
+    },
+  },
 };
 
 let themePreferences = {
@@ -293,6 +337,8 @@ function getLightThemeIdForDarkTheme(darkThemeId) {
   const mapping = {
     darkPaper: 'paper',
     darkMist: 'mist',
+    darkSage: 'sage',
+    darkBlush: 'blush',
   };
   return mapping[darkThemeId] || 'paper';
 }
@@ -301,8 +347,8 @@ function getDarkThemeIdForLightTheme(lightThemeId) {
   const mapping = {
     paper: 'darkPaper',
     mist: 'darkMist',
-    sage: 'darkPaper',
-    blush: 'darkPaper',
+    sage: 'darkSage',
+    blush: 'darkBlush',
   };
   return mapping[lightThemeId] || 'darkPaper';
 }
