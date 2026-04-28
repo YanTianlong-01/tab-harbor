@@ -145,6 +145,50 @@ const THEMES = {
       '--card-bg': '#fffaf7',
     },
   },
+  darkPaper: {
+    name: 'Dark Paper',
+    meta: 'Warm dark',
+    vars: {
+      '--ink': '#e8e2da',
+      '--paper': '#1a1613',
+      '--warm-gray': '#2d2722',
+      '--muted': '#7a726a',
+      '--accent-amber': '#d4854a',
+      '--accent-sage': '#6a8a72',
+      '--accent-slate': '#6a7b8a',
+      '--accent-rose': '#b37a7a',
+      '--workspace-accent': '#a0754f',
+      '--workspace-accent-soft': '#2d2722',
+      '--workspace-accent-border': '#5a4a3a',
+      '--workspace-accent-contrast': '#f8f5f0',
+      '--status-active': '#5a9a6a',
+      '--status-cooling': '#c89a3a',
+      '--status-abandoned': '#c36a6a',
+      '--card-bg': '#231f1a',
+    },
+  },
+  darkMist: {
+    name: 'Dark Mist',
+    meta: 'Cool dark',
+    vars: {
+      '--ink': '#d8dee5',
+      '--paper': '#161c21',
+      '--warm-gray': '#252d35',
+      '--muted': '#5d6771',
+      '--accent-amber': '#a08a6a',
+      '--accent-sage': '#6a8a7a',
+      '--accent-slate': '#6a8a9a',
+      '--accent-rose': '#9a7a7a',
+      '--workspace-accent': '#6a8a9a',
+      '--workspace-accent-soft': '#252d35',
+      '--workspace-accent-border': '#3a4a5a',
+      '--workspace-accent-contrast': '#f8f5f0',
+      '--status-active': '#5a9a7a',
+      '--status-cooling': '#c8a83a',
+      '--status-abandoned': '#c36a6a',
+      '--card-bg': '#1c232b',
+    },
+  },
 };
 
 let themePreferences = {
@@ -280,6 +324,7 @@ function applyThemePreferences() {
   const borderOpacity = Math.max(8, surfaceOpacity);
   const badgeOpacity = Math.max(3, Math.round(surfaceOpacity * 0.28));
   const fallbackOpacity = Math.max(4, Math.round(surfaceOpacity * 0.36));
+  const isDark = themePreferences.themeId.startsWith('dark');
 
   Object.entries(theme.vars).forEach(([name, value]) => {
     root.style.setProperty(name, value);
@@ -288,6 +333,10 @@ function applyThemePreferences() {
   root.style.setProperty('--custom-border-opacity', `${borderOpacity}%`);
   root.style.setProperty('--custom-badge-opacity', `${badgeOpacity}%`);
   root.style.setProperty('--custom-fallback-opacity', `${fallbackOpacity}%`);
+
+  if (body) {
+    body.classList.toggle('dark-theme', isDark);
+  }
 
   if (themePreferences.customBackground) {
     root.style.setProperty('--page-custom-background', `url("${themePreferences.customBackground}")`);

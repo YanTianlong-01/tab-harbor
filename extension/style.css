@@ -86,6 +86,30 @@ body::before {
   z-index: 1;
 }
 
+/* Dark theme adjustments */
+body.dark-theme::before {
+  opacity: 0.5; /* Reduce texture visibility in dark mode */
+}
+
+body.dark-theme .header-search-shell {
+  background: color-mix(in srgb, var(--card-bg) calc(var(--custom-surface-opacity) + 60%), transparent);
+  border-color: color-mix(in srgb, var(--workspace-accent-border) calc(var(--custom-border-opacity) + 20%), var(--warm-gray) 48%);
+}
+
+body.dark-theme .quick-shortcut-icon-wrap {
+  background: color-mix(in srgb, var(--card-bg) calc(var(--custom-surface-opacity) + 18%), transparent);
+}
+
+body.dark-theme .theme-menu {
+  background: var(--card-bg);
+  border-color: var(--warm-gray);
+}
+
+body.dark-theme .deferred-shell {
+  background: var(--card-bg);
+  border-color: var(--warm-gray);
+}
+
 .container {
   position: relative;
   z-index: 2;
