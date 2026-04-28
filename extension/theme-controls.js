@@ -235,6 +235,8 @@ const THEMES = {
   },
 };
 
+const THEME_ORDER = ['paper', 'sage', 'mist', 'blush', 'darkPaper', 'darkSage', 'darkMist', 'darkBlush'];
+
 let themePreferences = {
   themeId: 'paper',
   customBackground: '',
@@ -485,7 +487,9 @@ function renderThemeMenu() {
     pinToggle.setAttribute('aria-pressed', String(groupOrderState.pinEnabled));
   }
 
-  options.innerHTML = Object.entries(THEMES).map(([id, theme]) => `
+  options.innerHTML = THEME_ORDER.map(id => {
+      const theme = THEMES[id];
+      return `
     <button
       class="theme-option ${themePreferences.themeId === id ? 'is-active' : ''}"
       type="button"
@@ -503,8 +507,8 @@ function renderThemeMenu() {
       <span class="theme-option-check" aria-hidden="true">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" /></svg>
       </span>
-    </button>
-  `).join('') + `
+    </button>`;
+    }).join('') + `
     <button
       class="theme-option ${themePreferences.followSystemDark ? 'is-active' : ''}"
       type="button"
