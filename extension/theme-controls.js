@@ -56,11 +56,27 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-const THEMES = {
+const THEME_MODE_ORDER = ['system', 'light', 'dark'];
+const THEME_PALETTE_ORDER = ['paper', 'sage', 'mist', 'blush'];
+const VALID_THEME_MODES = new Set(THEME_MODE_ORDER);
+const VALID_THEME_PALETTES = new Set(THEME_PALETTE_ORDER);
+const THEME_MODE_LABEL_KEYS = {
+  system: 'themeModeSystem',
+  light: 'themeModeLight',
+  dark: 'themeModeDark',
+};
+const LEGACY_THEME_MIGRATION = {
+  paper: { mode: 'light', paletteId: 'paper' },
+  sage: { mode: 'light', paletteId: 'sage' },
+  mist: { mode: 'light', paletteId: 'mist' },
+  blush: { mode: 'light', paletteId: 'blush' },
+  midnight: { mode: 'dark', paletteId: 'mist' },
+};
+const THEME_FAMILIES = {
   paper: {
     name: 'Paper',
     meta: 'Warm neutral',
-    vars: {
+    light: {
       '--ink': '#1a1613',
       '--paper': '#f8f5f0',
       '--warm-gray': '#e8e2da',
@@ -78,77 +94,7 @@ const THEMES = {
       '--status-abandoned': '#b35a5a',
       '--card-bg': '#fffdf9',
     },
-  },
-  sage: {
-    name: 'Sage',
-    meta: 'Soft green',
-    vars: {
-      '--ink': '#172018',
-      '--paper': '#eef2eb',
-      '--warm-gray': '#dbe3d7',
-      '--muted': '#7f8c81',
-      '--accent-amber': '#8b7146',
-      '--accent-sage': '#4d6f57',
-      '--accent-slate': '#5e7072',
-      '--accent-rose': '#9a6860',
-      '--workspace-accent': '#4f7657',
-      '--workspace-accent-soft': '#deebe1',
-      '--workspace-accent-border': '#9ebda6',
-      '--workspace-accent-contrast': '#f6fbf7',
-      '--status-active': '#446953',
-      '--status-cooling': '#907548',
-      '--status-abandoned': '#996760',
-      '--card-bg': '#fafcf8',
-    },
-  },
-  mist: {
-    name: 'Mist',
-    meta: 'Cool neutral',
-    vars: {
-      '--ink': '#161c21',
-      '--paper': '#eef2f5',
-      '--warm-gray': '#d8dee5',
-      '--muted': '#7d8791',
-      '--accent-amber': '#927255',
-      '--accent-sage': '#5d7569',
-      '--accent-slate': '#4f687a',
-      '--accent-rose': '#9b6b71',
-      '--workspace-accent': '#4f6d88',
-      '--workspace-accent-soft': '#dde7f0',
-      '--workspace-accent-border': '#9fb2c5',
-      '--workspace-accent-contrast': '#f7fafc',
-      '--status-active': '#4e6c61',
-      '--status-cooling': '#94724a',
-      '--status-abandoned': '#93636c',
-      '--card-bg': '#fafcfd',
-    },
-  },
-  blush: {
-    name: 'Blush',
-    meta: 'Soft clay',
-    vars: {
-      '--ink': '#201716',
-      '--paper': '#f6efec',
-      '--warm-gray': '#e5d8d2',
-      '--muted': '#97827c',
-      '--accent-amber': '#a06d4f',
-      '--accent-sage': '#6a7866',
-      '--accent-slate': '#64707a',
-      '--accent-rose': '#ad6966',
-      '--workspace-accent': '#a5656f',
-      '--workspace-accent-soft': '#f2dfe1',
-      '--workspace-accent-border': '#d2a1a7',
-      '--workspace-accent-contrast': '#fff7f8',
-      '--status-active': '#5a7162',
-      '--status-cooling': '#9c7448',
-      '--status-abandoned': '#a96262',
-      '--card-bg': '#fffaf7',
-    },
-  },
-  darkPaper: {
-    name: 'Dark Paper',
-    meta: 'Warm dark',
-    vars: {
+    dark: {
       '--ink': '#e8e2da',
       '--paper': '#1a1613',
       '--warm-gray': '#2d2722',
@@ -167,32 +113,28 @@ const THEMES = {
       '--card-bg': '#231f1a',
     },
   },
-  darkMist: {
-    name: 'Dark Mist',
-    meta: 'Cool dark',
-    vars: {
-      '--ink': '#d8dee5',
-      '--paper': '#161c21',
-      '--warm-gray': '#252d35',
-      '--muted': '#5d6771',
-      '--accent-amber': '#a08a6a',
-      '--accent-sage': '#6a8a7a',
-      '--accent-slate': '#6a8a9a',
-      '--accent-rose': '#9a7a7a',
-      '--workspace-accent': '#6a8a9a',
-      '--workspace-accent-soft': '#252d35',
-      '--workspace-accent-border': '#3a4a5a',
-      '--workspace-accent-contrast': '#f8f5f0',
-      '--status-active': '#5a9a7a',
-      '--status-cooling': '#c8a83a',
-      '--status-abandoned': '#c36a6a',
-      '--card-bg': '#1c232b',
+  sage: {
+    name: 'Sage',
+    meta: 'Soft green',
+    light: {
+      '--ink': '#172018',
+      '--paper': '#eef2eb',
+      '--warm-gray': '#dbe3d7',
+      '--muted': '#7f8c81',
+      '--accent-amber': '#8b7146',
+      '--accent-sage': '#4d6f57',
+      '--accent-slate': '#5e7072',
+      '--accent-rose': '#9a6860',
+      '--workspace-accent': '#4f7657',
+      '--workspace-accent-soft': '#deebe1',
+      '--workspace-accent-border': '#9ebda6',
+      '--workspace-accent-contrast': '#f6fbf7',
+      '--status-active': '#446953',
+      '--status-cooling': '#907548',
+      '--status-abandoned': '#996760',
+      '--card-bg': '#fafcf8',
     },
-  },
-  darkSage: {
-    name: 'Dark Sage',
-    meta: 'Green dark',
-    vars: {
+    dark: {
       '--ink': '#d8e3d7',
       '--paper': '#172018',
       '--warm-gray': '#252d25',
@@ -211,10 +153,68 @@ const THEMES = {
       '--card-bg': '#1e261e',
     },
   },
-  darkBlush: {
-    name: 'Dark Blush',
-    meta: 'Clay dark',
-    vars: {
+  mist: {
+    name: 'Mist',
+    meta: 'Cool neutral',
+    light: {
+      '--ink': '#161c21',
+      '--paper': '#eef2f5',
+      '--warm-gray': '#d8dee5',
+      '--muted': '#7d8791',
+      '--accent-amber': '#927255',
+      '--accent-sage': '#5d7569',
+      '--accent-slate': '#4f687a',
+      '--accent-rose': '#9b6b71',
+      '--workspace-accent': '#4f6d88',
+      '--workspace-accent-soft': '#dde7f0',
+      '--workspace-accent-border': '#9fb2c5',
+      '--workspace-accent-contrast': '#f7fafc',
+      '--status-active': '#4e6c61',
+      '--status-cooling': '#94724a',
+      '--status-abandoned': '#93636c',
+      '--card-bg': '#fafcfd',
+    },
+    dark: {
+      '--ink': '#d8dee5',
+      '--paper': '#161c21',
+      '--warm-gray': '#252d35',
+      '--muted': '#5d6771',
+      '--accent-amber': '#a08a6a',
+      '--accent-sage': '#6a8a7a',
+      '--accent-slate': '#6a8a9a',
+      '--accent-rose': '#9a7a7a',
+      '--workspace-accent': '#6a8a9a',
+      '--workspace-accent-soft': '#252d35',
+      '--workspace-accent-border': '#3a4a5a',
+      '--workspace-accent-contrast': '#f8f5f0',
+      '--status-active': '#5a9a7a',
+      '--status-cooling': '#c8a83a',
+      '--status-abandoned': '#c36a6a',
+      '--card-bg': '#1c232b',
+    },
+  },
+  blush: {
+    name: 'Blush',
+    meta: 'Soft clay',
+    light: {
+      '--ink': '#201716',
+      '--paper': '#f6efec',
+      '--warm-gray': '#e5d8d2',
+      '--muted': '#97827c',
+      '--accent-amber': '#a06d4f',
+      '--accent-sage': '#6a7866',
+      '--accent-slate': '#64707a',
+      '--accent-rose': '#ad6966',
+      '--workspace-accent': '#a5656f',
+      '--workspace-accent-soft': '#f2dfe1',
+      '--workspace-accent-border': '#d2a1a7',
+      '--workspace-accent-contrast': '#fff7f8',
+      '--status-active': '#5a7162',
+      '--status-cooling': '#9c7448',
+      '--status-abandoned': '#a96262',
+      '--card-bg': '#fffaf7',
+    },
+    dark: {
       '--ink': '#e8e2da',
       '--paper': '#201716',
       '--warm-gray': '#332a2a',
@@ -235,28 +235,31 @@ const THEMES = {
   },
 };
 
-const THEME_ORDER = ['paper', 'sage', 'mist', 'blush', 'darkPaper', 'darkSage', 'darkMist', 'darkBlush'];
-
 let themePreferences = {
-  themeId: 'paper',
+  mode: 'system',
+  paletteId: 'paper',
   customBackground: '',
   surfaceOpacity: 14,
-  followSystemDark: false,
 };
+
+let systemThemeMediaQuery = null;
+let systemThemeListener = null;
 
 function normalizeThemePreferences(input) {
   const next = input && typeof input === 'object' ? input : {};
-  const themeId = String(next.themeId || 'paper');
+  const legacyThemeId = String(next.themeId || '');
+  const migrated = LEGACY_THEME_MIGRATION[legacyThemeId] || null;
+  const rawMode = String(next.mode || migrated?.mode || 'system');
+  const rawPaletteId = String(next.paletteId || migrated?.paletteId || 'paper');
   const rawOpacity = Number(next.surfaceOpacity);
   const surfaceOpacity = Number.isFinite(rawOpacity)
     ? Math.min(60, Math.max(2, Math.round(rawOpacity)))
     : 14;
-  const followSystemDark = Boolean(next.followSystemDark);
   return {
-    themeId: THEMES[themeId] ? themeId : 'paper',
+    mode: VALID_THEME_MODES.has(rawMode) ? rawMode : 'system',
+    paletteId: VALID_THEME_PALETTES.has(rawPaletteId) ? rawPaletteId : 'paper',
     customBackground: typeof next.customBackground === 'string' ? next.customBackground : '',
     surfaceOpacity,
-    followSystemDark,
   };
 }
 
@@ -323,73 +326,68 @@ function isTransientClipboardReference(value) {
   );
 }
 
-function getThemeDefinition(themeId) {
-  return THEMES[themeId] || THEMES.paper;
+function getSystemThemeMode() {
+  return Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+}
+
+function getResolvedTone(preferences = themePreferences) {
+  const normalized = normalizeThemePreferences(preferences);
+  if (normalized.mode === 'system') {
+    return getSystemThemeMode();
+  }
+  return normalized.mode;
+}
+
+function getThemeFamilyDefinition(paletteId) {
+  return THEME_FAMILIES[paletteId] || THEME_FAMILIES.paper;
+}
+
+function getResolvedThemeDefinition(preferences = themePreferences) {
+  const normalized = normalizeThemePreferences(preferences);
+  const resolvedTone = getResolvedTone(normalized);
+  const family = getThemeFamilyDefinition(normalized.paletteId);
+  return {
+    id: normalized.paletteId,
+    name: family.name,
+    meta: family.meta,
+    tone: resolvedTone,
+    vars: family[resolvedTone],
+  };
+}
+
+function getPalettePreviewStyle(paletteId) {
+  const family = getThemeFamilyDefinition(paletteId);
+  return `--theme-paper:${family.light['--paper']};--theme-accent:${family.light['--accent-amber']};`;
+}
+
+function syncSystemThemeSubscription() {
+  if (systemThemeMediaQuery && systemThemeListener) {
+    if (typeof systemThemeMediaQuery.removeEventListener === 'function') {
+      systemThemeMediaQuery.removeEventListener('change', systemThemeListener);
+    } else if (typeof systemThemeMediaQuery.removeListener === 'function') {
+      systemThemeMediaQuery.removeListener(systemThemeListener);
+    }
+  }
+
+  systemThemeMediaQuery = window.matchMedia?.('(prefers-color-scheme: dark)') || null;
+  systemThemeListener = null;
+  if (!systemThemeMediaQuery) return;
+
+  systemThemeListener = () => {
+    if (themePreferences.mode !== 'system') return;
+    applyThemePreferences();
+    renderThemeMenu();
+  };
+
+  if (typeof systemThemeMediaQuery.addEventListener === 'function') {
+    systemThemeMediaQuery.addEventListener('change', systemThemeListener);
+  } else if (typeof systemThemeMediaQuery.addListener === 'function') {
+    systemThemeMediaQuery.addListener(systemThemeListener);
+  }
 }
 
 function prefersReducedMotion() {
   return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-}
-
-function isSystemDarkMode() {
-  return Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches);
-}
-
-function getLightThemeIdForDarkTheme(darkThemeId) {
-  const mapping = {
-    darkPaper: 'paper',
-    darkMist: 'mist',
-    darkSage: 'sage',
-    darkBlush: 'blush',
-  };
-  return mapping[darkThemeId] || 'paper';
-}
-
-function getDarkThemeIdForLightTheme(lightThemeId) {
-  const mapping = {
-    paper: 'darkPaper',
-    mist: 'darkMist',
-    sage: 'darkSage',
-    blush: 'darkBlush',
-  };
-  return mapping[lightThemeId] || 'darkPaper';
-}
-
-function maybeApplySystemDarkMode() {
-  if (!themePreferences.followSystemDark) return;
-  const systemDark = isSystemDarkMode();
-  const currentThemeIsDark = themePreferences.themeId.startsWith('dark');
-
-  if (systemDark && !currentThemeIsDark) {
-    // System is dark, but current theme is light — switch to dark
-    const darkThemeId = getDarkThemeIdForLightTheme(themePreferences.themeId);
-    themePreferences.themeId = darkThemeId;
-    applyThemePreferences();
-    renderThemeMenu();
-  } else if (!systemDark && currentThemeIsDark) {
-    // System is light, but current theme is dark — switch to light
-    const lightThemeId = getLightThemeIdForDarkTheme(themePreferences.themeId);
-    themePreferences.themeId = lightThemeId;
-    applyThemePreferences();
-    renderThemeMenu();
-  }
-}
-
-function subscribeToSystemColorScheme() {
-  const query = window.matchMedia('(prefers-color-scheme: dark)');
-  if (!query) return;
-
-  const handler = () => {
-    maybeApplySystemDarkMode();
-  };
-
-  // Modern browsers support addEventListener
-  if (query.addEventListener) {
-    query.addEventListener('change', handler);
-  } else {
-    // Fallback for older browsers
-    query.addListener(handler);
-  }
 }
 
 function focusFirstElement(container) {
@@ -429,12 +427,11 @@ function hexToRgbChannels(hex) {
 function applyThemePreferences() {
   const root = document.documentElement;
   const body = document.body;
-  const theme = getThemeDefinition(themePreferences.themeId);
+  const theme = getResolvedThemeDefinition(themePreferences);
   const surfaceOpacity = themePreferences.surfaceOpacity;
   const borderOpacity = Math.max(8, surfaceOpacity);
   const badgeOpacity = Math.max(3, Math.round(surfaceOpacity * 0.28));
   const fallbackOpacity = Math.max(4, Math.round(surfaceOpacity * 0.36));
-  const isDark = themePreferences.themeId.startsWith('dark');
 
   Object.entries(theme.vars).forEach(([name, value]) => {
     root.style.setProperty(name, value);
@@ -443,9 +440,9 @@ function applyThemePreferences() {
   root.style.setProperty('--custom-border-opacity', `${borderOpacity}%`);
   root.style.setProperty('--custom-badge-opacity', `${badgeOpacity}%`);
   root.style.setProperty('--custom-fallback-opacity', `${fallbackOpacity}%`);
-
   if (body) {
-    body.classList.toggle('dark-theme', isDark);
+    body.classList.toggle('theme-tone-light', theme.tone === 'light');
+    body.classList.toggle('theme-tone-dark', theme.tone === 'dark');
   }
 
   if (themePreferences.customBackground) {
@@ -466,12 +463,13 @@ function applyThemePreferences() {
 
 function renderThemeMenu() {
   const trigger = document.getElementById('themeMenuTrigger');
+  const modeOptions = document.getElementById('themeModeOptions');
   const pinToggle = document.getElementById('headerPinToggle');
   const panel = document.getElementById('themeMenuPanel');
   const options = document.getElementById('themeOptions');
   const transparencyRange = document.getElementById('themeTransparencyRange');
   const transparencyValue = document.getElementById('themeTransparencyValue');
-  if (!trigger || !panel || !options || !transparencyRange || !transparencyValue) return;
+  if (!trigger || !panel || !modeOptions || !options || !transparencyRange || !transparencyValue) return;
 
   trigger.setAttribute('aria-expanded', String(themeMenuOpen));
   panel.hidden = !themeMenuOpen;
@@ -487,38 +485,31 @@ function renderThemeMenu() {
     pinToggle.setAttribute('aria-pressed', String(groupOrderState.pinEnabled));
   }
 
-  options.innerHTML = THEME_ORDER.map(id => {
-      const theme = THEMES[id];
-      return `
+  modeOptions.innerHTML = THEME_MODE_ORDER.map(id => `
     <button
-      class="theme-option ${themePreferences.themeId === id ? 'is-active' : ''}"
+      class="theme-mode-option ${themePreferences.mode === id ? 'is-active' : ''}"
+      type="button"
+      data-action="select-theme-mode"
+      data-theme-mode="${id}"
+      aria-pressed="${themePreferences.mode === id}"
+    >${themeT ? themeT(THEME_MODE_LABEL_KEYS[id]) : id}</button>
+  `).join('');
+
+  options.innerHTML = THEME_PALETTE_ORDER.map(id => {
+    const family = getThemeFamilyDefinition(id);
+    return `
+    <button
+      class="theme-option ${themePreferences.paletteId === id ? 'is-active' : ''}"
       type="button"
       data-action="select-theme"
-      data-theme-id="${id}"
-      aria-pressed="${themePreferences.themeId === id}"
-      style="--theme-paper:${theme.vars['--paper']};--theme-accent:${theme.vars['--accent-amber']};"
+      data-palette-id="${id}"
+      aria-pressed="${themePreferences.paletteId === id}"
+      style="${getPalettePreviewStyle(id)}"
     >
       <span class="theme-option-main">
         <span class="theme-option-swatch" aria-hidden="true"></span>
         <span>
-          <span class="theme-option-name">${theme.name}</span>
-        </span>
-      </span>
-      <span class="theme-option-check" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" /></svg>
-      </span>
-    </button>`;
-    }).join('') + `
-    <button
-      class="theme-option ${themePreferences.followSystemDark ? 'is-active' : ''}"
-      type="button"
-      data-action="toggle-follow-system"
-      aria-pressed="${themePreferences.followSystemDark}"
-    >
-      <span class="theme-option-main">
-        <span class="theme-option-swatch theme-option-swatch-system" aria-hidden="true"></span>
-        <span>
-          <span class="theme-option-name">Follow System</span>
+          <span class="theme-option-name">${family.name}</span>
         </span>
       </span>
       <span class="theme-option-check" aria-hidden="true">
@@ -526,6 +517,7 @@ function renderThemeMenu() {
       </span>
     </button>
   `;
+  }).join('');
 }
 
 async function getQuickShortcuts() {
@@ -766,9 +758,9 @@ function syncShortcutEditor() {
     ? (themeT ? themeT('shortcutPreviewCustomImageIcon') : 'Custom image icon')
     : shortcutEditorState.iconKind === 'svg'
       ? (themeT ? themeT('shortcutPreviewSvgIcon') : 'SVG icon')
-    : shortcutEditorState.iconKind === 'glyph'
-      ? (themeT ? themeT('shortcutPreviewEmojiIcon') : 'Emoji icon')
-      : (themeT ? themeT('shortcutPreviewWebsiteIcon') : 'Website icon');
+      : shortcutEditorState.iconKind === 'glyph'
+        ? (themeT ? themeT('shortcutPreviewEmojiIcon') : 'Emoji icon')
+        : (themeT ? themeT('shortcutPreviewWebsiteIcon') : 'Website icon');
   const previewMeta = shortcutEditorState.iconKind
     ? (themeT ? themeT('shortcutPreviewHasCustomIcon') : 'Custom icon will replace the site favicon.')
     : (themeT ? themeT('shortcutPreviewNoCustomIcon') : 'Upload or paste an image, or type an emoji.');
@@ -1226,9 +1218,9 @@ function renderQuickShortcutCard(shortcut) {
     ? customIcon.value
     : customIcon.kind === 'svg'
       ? svgToDataUrl(customIcon.value)
-    : customIcon.kind === 'glyph'
-      ? ''
-      : faviconUrl;
+      : customIcon.kind === 'glyph'
+        ? ''
+        : faviconUrl;
   const glyphIcon = customIcon.kind === 'glyph' ? customIcon.value : '';
 
   return `
@@ -1404,7 +1396,7 @@ async function tryShortcutEditorPasteViaExecCommand() {
     let commandWorked = false;
     try {
       commandWorked = document.execCommand('paste');
-    } catch {}
+    } catch { }
 
     setTimeout(() => cleanup(commandWorked), 120);
   });
@@ -1491,16 +1483,16 @@ async function renderTabPickerPanel() {
   const query = tabPickerSearchQuery.trim().toLowerCase();
   const filtered = query
     ? realTabs.filter(t => {
-        const title = (t.title || '').toLowerCase();
-        const url = (t.url || '').toLowerCase();
-        return title.includes(query) || url.includes(query);
-      })
+      const title = (t.title || '').toLowerCase();
+      const url = (t.url || '').toLowerCase();
+      return title.includes(query) || url.includes(query);
+    })
     : realTabs;
 
   const byDomain = new Map();
   for (const tab of filtered) {
     let hostname = '';
-    try { hostname = new URL(tab.url).hostname; } catch {}
+    try { hostname = new URL(tab.url).hostname; } catch { }
     const group = hostname.replace(/^www\./, '') || 'other';
     if (!byDomain.has(group)) byDomain.set(group, []);
     byDomain.get(group).push(tab);
@@ -1524,12 +1516,12 @@ async function renderTabPickerPanel() {
       const isAdded = existingUrls.has(tab.url);
       const title = stripTitleNoise(tab.title) || tab.url;
       const safeTitle = themeEscapeHtmlAttribute(title);
+      const fallbackInitial = (friendlyDomain(tab.url ? new URL(tab.url).hostname : '') || '?')[0] || '?';
       let faviconHtml;
       if (tab.favIconUrl) {
-        faviconHtml = `<img class="tab-picker-favicon" src="${themeEscapeHtmlAttribute(tab.favIconUrl)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'), {className:'tab-picker-favicon-fallback', textContent:((${JSON.stringify(friendlyDomain(tab.url ? new URL(tab.url).hostname : '') || '?')})[0]||'?').toUpperCase()}))">`;
+        faviconHtml = `<img class="tab-picker-favicon" src="${themeEscapeHtmlAttribute(tab.favIconUrl)}" alt="" data-fallback-src=""><span class="tab-picker-favicon-fallback" style="display:none">${fallbackInitial.toUpperCase()}</span>`;
       } else {
-        const initial = (friendlyDomain(tab.url ? new URL(tab.url).hostname : '') || '?')[0] || '?';
-        faviconHtml = `<span class="tab-picker-favicon-fallback">${initial.toUpperCase()}</span>`;
+        faviconHtml = `<span class="tab-picker-favicon-fallback">${fallbackInitial.toUpperCase()}</span>`;
       }
 
       const checkbox = `<input class="tab-picker-checkbox" type="checkbox" ${isSelected ? 'checked' : ''} data-action="toggle-tab-picker-selection" data-tab-id="${tabId}" aria-label="Select ${safeTitle}">`;
@@ -1821,7 +1813,7 @@ document.addEventListener('pointerdown', (e) => {
     height: rect.height,
     moved: false,
   };
-  });
+});
 
 document.addEventListener('pointermove', (e) => {
   if (!quickShortcutDraggedId || !quickShortcutDragState) return;
@@ -1846,11 +1838,11 @@ document.addEventListener('pointerup', async () => {
   const moved = quickShortcutDragState.moved;
   const nextOrderIds = moved
     ? [...quickShortcutDragState.listEl.children]
-        .map(node => {
-          if (node === quickShortcutSlotEl) return quickShortcutDraggedId;
-          return node.dataset?.shortcutId || '';
-        })
-        .filter(Boolean)
+      .map(node => {
+        if (node === quickShortcutSlotEl) return quickShortcutDraggedId;
+        return node.dataset?.shortcutId || '';
+      })
+      .filter(Boolean)
     : [];
   clearQuickShortcutDragState();
 
@@ -2001,13 +1993,7 @@ document.addEventListener('click', (e) => {
 async function loadThemePreferences() {
   const stored = await chrome.storage.local.get(THEME_PREFERENCES_KEY);
   themePreferences = normalizeThemePreferences(stored[THEME_PREFERENCES_KEY]);
-  
-  // Subscribe to system color scheme changes
-  subscribeToSystemColorScheme();
-  
-  // Apply system dark mode if enabled
-  maybeApplySystemDarkMode();
-  
+  syncSystemThemeSubscription();
   applyThemePreferences();
   renderThemeMenu();
   return themePreferences;
@@ -2019,12 +2005,7 @@ async function saveThemePreferences(nextPreferences) {
     ...nextPreferences,
   });
   await chrome.storage.local.set({ [THEME_PREFERENCES_KEY]: themePreferences });
-  
-  // If followSystemDark changed, apply immediately
-  if (nextPreferences.followSystemDark !== undefined) {
-    maybeApplySystemDarkMode();
-  }
-  
+  syncSystemThemeSubscription();
   applyThemePreferences();
   renderThemeMenu();
   return themePreferences;
@@ -2032,6 +2013,9 @@ async function saveThemePreferences(nextPreferences) {
 
 globalThis.TabOutThemeControls = {
   filterRealTabs,
+  getResolvedThemeDefinition,
+  getResolvedTone,
   normalizeShortcutUrl,
   normalizeQuickShortcuts,
+  normalizeThemePreferences,
 };
