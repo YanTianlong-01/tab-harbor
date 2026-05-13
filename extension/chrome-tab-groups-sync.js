@@ -168,6 +168,66 @@
     }
   }
 
+  async function reorderGroupedTabs(chromeGroupId, desiredTabIds, windowId) {
+    if (!chromeGroupId || !Array.isArray(desiredTabIds) || desiredTabIds.length <= 1) return;
+
+    let groupedTabs = [];
+    try {
+      groupedTabs = await chrome.tabs.query({ groupId: chromeGroupId });
+    } catch {
+      return;
+    }
+
+    if (!groupedTabs.length) return;
+
+    const currentTabs = groupedTabs
+      .filter(tab => desiredTabIds.includes(tab.id))
+      .sort((a, b) => a.index - b.index);
+    if (!currentTabs.length) return;
+
+    const currentOrder = currentTabs.map(tab => tab.id);
+    if (currentOrder.length === desiredTabIds.length &&
+        currentOrder.every((tabId, index) => tabId === desiredTabIds[index])) {
+      return;
+    }
+
+    const baseIndex = Math.min(...currentTabs.map(tab => tab.index));
+    for (const [offset, tabId] of desiredTabIds.entries()) {
+      try {
+        await chrome.tabs.move(tabId, { windowId, index: baseIndex + offset });
+      } catch {}
+    }
+  }
+
+  async function reorderWindowTabsByDesiredOrder(windowId, desiredTabIds) {
+    if (!Number.isFinite(windowId) || !Array.isArray(desiredTabIds) || desiredTabIds.length <= 1) return;
+
+    let windowTabs = [];
+    try {
+      windowTabs = await chrome.tabs.query({ windowId });
+    } catch {
+      return;
+    }
+
+    const relevantTabs = windowTabs
+      .filter(tab => desiredTabIds.includes(tab.id))
+      .sort((a, b) => a.index - b.index);
+    if (relevantTabs.length <= 1) return;
+
+    const currentOrder = relevantTabs.map(tab => tab.id);
+    if (currentOrder.length === desiredTabIds.length &&
+        currentOrder.every((tabId, index) => tabId === desiredTabIds[index])) {
+      return;
+    }
+
+    const baseIndex = Math.min(...relevantTabs.map(tab => tab.index));
+    for (const [offset, tabId] of desiredTabIds.entries()) {
+      try {
+        await chrome.tabs.move(tabId, { windowId, index: baseIndex + offset });
+      } catch {}
+    }
+  }
+
   async function removeAllChromeGroups() {
     muteChromeGroupEvents();
     const allTrackedTabIds = [];
@@ -204,6 +264,7 @@
 
     // Build desired state: { groupKey: { windowId: [tabIds] } }
     const desired = {};
+    const desiredWindowOrders = {};
     for (const group of domainGroups) {
       const groupKey = group.domain;
       for (const tab of (group.tabs || [])) {
@@ -212,6 +273,8 @@
         if (!desired[groupKey]) desired[groupKey] = {};
         if (!desired[groupKey][windowId]) desired[groupKey][windowId] = [];
         desired[groupKey][windowId].push(tab.id);
+        if (!desiredWindowOrders[windowId]) desiredWindowOrders[windowId] = [];
+        desiredWindowOrders[windowId].push(tab.id);
       }
     }
 
@@ -282,7 +345,7 @@
 
           if (chromeGroupId != null) {
             try {
-              await chrome.tabGroups.update(chromeGroupId, { title, color: groupColor });
+              await chrome.tabGroups.update(chromeGroupId, { title, color: groupColor, collapsed: true });
             } catch {}
           }
         } else {
@@ -292,12 +355,20 @@
           } catch {}
         }
 
+        if (chromeGroupId != null) {
+          await reorderGroupedTabs(chromeGroupId, tabIds, windowId);
+        }
+
         // Track the mapping
         if (chromeGroupId != null) {
           if (!chromeGroupMap[groupKey]) chromeGroupMap[groupKey] = {};
           chromeGroupMap[groupKey][windowId] = chromeGroupId;
         }
       }
+    }
+
+    for (const [windowIdStr, orderedTabIds] of Object.entries(desiredWindowOrders)) {
+      await reorderWindowTabsByDesiredOrder(Number(windowIdStr), orderedTabIds);
     }
     await persistChromeGroupMap();
   }
@@ -333,6 +404,30 @@
       return await chrome.tabGroups.query({});
     } catch {
       return [];
+    }
+  }
+
+  async function collapseChromeTabGroupsInWindow(windowId) {
+    if (!cachedEnabled || !isChromeApiAvailable()) return;
+
+    const targetWindowId = Number(windowId);
+    if (!Number.isFinite(targetWindowId)) return;
+
+    let groups = [];
+    try {
+      groups = await chrome.tabGroups.query({});
+    } catch {
+      return;
+    }
+
+    const groupsInWindow = groups.filter(group => Number(group?.windowId) === targetWindowId);
+    muteChromeGroupEvents();
+
+    for (const group of groupsInWindow) {
+      if (Boolean(group.collapsed)) continue;
+      try {
+        await chrome.tabGroups.update(group.id, { collapsed: true });
+      } catch {}
     }
   }
 
@@ -391,6 +486,7 @@
     getChromeGroupCount,
     populateChromeGroupMap,
     queryExistingChromeGroups,
+    collapseChromeTabGroupsInWindow,
     syncChromeTabGroupExpansionForTab,
     setImportMode,
     isImportMode,

@@ -1,6 +1,7 @@
 'use strict';
 
 const {
+  escapeHtml: drawerEscapeHtml,
   getFallbackLabel: drawerGetFallbackLabel,
   getIconSources: drawerGetIconSources,
 } = globalThis.TabOutIconUtils || {};
@@ -177,7 +178,7 @@ function renderTodoArchiveItem(todo) {
   return `
     <div class="archive-item">
       <div class="archive-item-main">
-        <div class="archive-item-title">${todo.title}</div>
+        <div class="archive-item-title">${drawerEscapeHtml ? drawerEscapeHtml(todo.title) : todo.title}</div>
         <span class="archive-item-date">${ago}</span>
       </div>
       <button class="archive-item-delete" type="button" data-action="delete-todo-archive" data-todo-id="${todo.id}" aria-label="Delete archived todo" title="Delete archived todo">
@@ -197,7 +198,7 @@ function renderTodoListItem(todo, { dragEnabled = true } = {}) {
     <div class="todo-item" data-todo-id="${todo.id}" data-drawer-sort-id="${todo.id}" data-drawer-sort-kind="todo">
       <input type="checkbox" class="todo-checkbox" data-action="complete-todo" data-todo-id="${todo.id}">
       <button class="todo-main" type="button" data-action="open-todo-detail" data-todo-id="${todo.id}">
-        <span class="todo-title">${todo.title}</span>
+        <span class="todo-title">${drawerEscapeHtml ? drawerEscapeHtml(todo.title) : todo.title}</span>
         <span class="todo-meta">${ago}</span>
       </button>
       <div class="todo-actions">
@@ -214,8 +215,8 @@ function renderTodoDetail(todo) {
         Back to list
       </button>
       <div class="todo-detail-card">
-        <h3>${todo.title}</h3>
-        <p>${todo.description || 'Add a note when this task needs more context.'}</p>
+        <h3>${drawerEscapeHtml ? drawerEscapeHtml(todo.title) : todo.title}</h3>
+        <p>${drawerEscapeHtml ? drawerEscapeHtml(todo.description || 'Add a note when this task needs more context.') : (todo.description || 'Add a note when this task needs more context.')}</p>
         <div class="todo-detail-meta">Created ${timeAgo(todo.createdAt)}</div>
       </div>
     </div>`;
@@ -444,6 +445,20 @@ function setDeferredPanelOpen(nextOpen) {
   });
 }
 
+function sanitizeUrl(url) {
+  if (!url) return '';
+  const trimmed = String(url).trim();
+  if (!trimmed) return '';
+  try {
+    const parsed = new URL(trimmed);
+    const allowed = ['http:', 'https:', 'file:', 'mailto:', 'chrome-extension:'];
+    if (!allowed.includes(parsed.protocol)) return '';
+    return trimmed;
+  } catch {
+    return '';
+  }
+}
+
 function renderDeferredItem(item) {
   const iconData = drawerGetIconSources(item, 16);
   const domain = iconData.hostname.replace(/^www\./, '');
@@ -457,15 +472,19 @@ function renderDeferredItem(item) {
         ${ICONS.move}
       </button>`
     : '';
+  const safeUrl = sanitizeUrl(item.url);
+  const titleAttr = (item.title || '').replace(/"/g, '&quot;');
+  const faviconHtml = faviconUrl ? `<img src="${faviconUrl}" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" data-fallback-src="${safeFallbackUrl}">` : '';
+  const titleHtml = `${faviconHtml}<span class="inline-favicon-fallback"${faviconUrl ? ' style="display:none"' : ''}>${fallbackLabel}</span>${drawerEscapeHtml ? drawerEscapeHtml(item.title || item.url) : (item.title || item.url)}`;
+  const titleTag = safeUrl
+    ? `<a href="${safeUrl}" target="_blank" rel="noopener" class="deferred-title" title="${titleAttr}">${titleHtml}</a>`
+    : `<span class="deferred-title" title="${titleAttr}">${titleHtml}</span>`;
 
   return `
     <div class="deferred-item" data-deferred-id="${item.id}" data-drawer-sort-id="${item.id}" data-drawer-sort-kind="saved">
       <input type="checkbox" class="deferred-checkbox" data-action="check-deferred" data-deferred-id="${item.id}">
       <div class="deferred-info">
-        <a href="${item.url}" target="_blank" rel="noopener" class="deferred-title" title="${(item.title || '').replace(/"/g, '&quot;')}">
-          ${faviconUrl ? `<img src="${faviconUrl}" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" data-fallback-src="${safeFallbackUrl}">` : ''}
-          <span class="inline-favicon-fallback"${faviconUrl ? ' style="display:none"' : ''}>${fallbackLabel}</span>${item.title || item.url}
-        </a>
+        ${titleTag}
         <div class="deferred-meta">
           <span>${domain}</span>
           <span>${ago}</span>
@@ -485,12 +504,16 @@ function renderDeferredItem(item) {
 
 function renderArchiveItem(item) {
   const ago = item.completedAt ? timeAgo(item.completedAt) : timeAgo(item.savedAt);
+  const safeUrl = sanitizeUrl(item.url);
+  const titleAttr = (item.title || '').replace(/"/g, '&quot;');
+  const titleText = drawerEscapeHtml ? drawerEscapeHtml(item.title || item.url) : (item.title || item.url);
+  const titleTag = safeUrl
+    ? `<a href="${safeUrl}" target="_blank" rel="noopener" class="archive-item-title" title="${titleAttr}">${titleText}</a>`
+    : `<span class="archive-item-title" title="${titleAttr}">${titleText}</span>`;
   return `
     <div class="archive-item">
       <div class="archive-item-main">
-        <a href="${item.url}" target="_blank" rel="noopener" class="archive-item-title" title="${(item.title || '').replace(/"/g, '&quot;')}">
-          ${item.title || item.url}
-        </a>
+        ${titleTag}
         <span class="archive-item-date">${ago}</span>
       </div>
       <button class="archive-item-delete" type="button" data-action="delete-archive-item" data-archive-id="${item.id}" aria-label="Delete from archive" title="Delete from archive">

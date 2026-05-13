@@ -47,6 +47,7 @@
       closeAllTabsButton: 'Close all tabs',
       emptyTabsCount: '0 domains',
       promptNewGroupName: 'New group name',
+      promptRenameGroupName: 'Rename group',
       promptTodoTitle: 'Todo title',
       promptTodoDetails: 'Todo details (optional)',
       toastThemeUpdated: 'Theme updated',
@@ -55,6 +56,7 @@
       toastClosedExtraTabHarborTabs: 'Closed extra Tab Harbor tabs',
       toastMovedTo: 'Moved to {name}',
       toastCreatedGroup: 'Created {name}',
+      toastRenamedGroup: 'Renamed to {name}',
       toastCouldNotCreateGroup: 'Could not create group',
       toastMovedBackToOriginalGroup: 'Moved back to original group',
       toastPinnedOrder: 'Pinned current order',
@@ -100,6 +102,9 @@
       jumpToLabel: 'Jump to {label}',
       homepagesLabel: 'Homepages',
       moveToGroup: 'Move to group',
+      renameGroup: 'Rename group',
+      saveButton: 'Save',
+      cancelButton: 'Cancel',
       noGroupsYet: 'No groups yet',
       newGroupButton: '+ New group',
       backToOriginalGroup: 'Back to original group',
@@ -122,6 +127,7 @@
       uploadImage: 'Upload image',
       clearText: 'Clear',
       surfaceDepth: 'Surface depth',
+      hitokotoLabel: 'Hitokoto',
       editQuickTab: 'Edit quick tab',
       removeQuickTab: 'Remove quick tab',
       addQuickTab: 'Add quick tab',
@@ -129,10 +135,16 @@
       languageLabel: 'Language',
       languageAuto: 'Auto',
       languageEnglish: 'English',
-      languageChinese: '中文',
+      languageChinese: 'Chinese',
       chromeTabGroupsLabel: 'Chrome tab groups',
       toastChromeTabGroupsOn: 'Chrome tab groups on',
       toastChromeTabGroupsOff: 'Chrome tab groups off',
+      shortcutsLabel: 'Shortcuts',
+      popupShortcutsEmpty: 'No shortcuts yet.',
+      popupTabsEmpty: 'No tabs to display.',
+      ungroupedLabel: 'Ungrouped',
+      closeTabButton: 'Close',
+      popupRefreshLabel: 'Refresh popup content',
     },
     'zh-CN': {
       emptyTitle: '标签页清零了。',
@@ -155,6 +167,7 @@
       closeAllTabsButton: '关闭全部标签页',
       emptyTabsCount: '0 个域名分组',
       promptNewGroupName: '新分组名称',
+      promptRenameGroupName: '重命名分组',
       promptTodoTitle: '待办标题',
       promptTodoDetails: '待办详情（可选）',
       toastThemeUpdated: '主题已更新',
@@ -163,6 +176,7 @@
       toastClosedExtraTabHarborTabs: '已关闭多余的 Tab Harbor 标签页',
       toastMovedTo: '已移动到 {name}',
       toastCreatedGroup: '已创建 {name}',
+      toastRenamedGroup: '已重命名为 {name}',
       toastCouldNotCreateGroup: '无法创建分组',
       toastMovedBackToOriginalGroup: '已移回原始分组',
       toastPinnedOrder: '已固定当前顺序',
@@ -208,6 +222,9 @@
       jumpToLabel: '跳转到 {label}',
       homepagesLabel: '主页',
       moveToGroup: '移动到分组',
+      renameGroup: '重命名分组',
+      saveButton: '保存',
+      cancelButton: '取消',
       noGroupsYet: '还没有分组',
       newGroupButton: '+ 新建分组',
       backToOriginalGroup: '移回原始分组',
@@ -230,6 +247,7 @@
       uploadImage: '上传图片',
       clearText: '清除',
       surfaceDepth: '透明度',
+      hitokotoLabel: '一言',
       editQuickTab: '编辑快捷链接',
       removeQuickTab: '删除快捷链接',
       addQuickTab: '添加快捷链接',
@@ -241,6 +259,12 @@
       chromeTabGroupsLabel: 'Chrome 标签组',
       toastChromeTabGroupsOn: '已启用 同步Chrome标签组',
       toastChromeTabGroupsOff: '已禁用 同步Chrome标签组',
+      shortcutsLabel: '快捷方式',
+      popupShortcutsEmpty: '还没有快捷方式。',
+      popupTabsEmpty: '没有可显示的网页标签页。',
+      ungroupedLabel: '未分组',
+      closeTabButton: '关闭',
+      popupRefreshLabel: '刷新弹窗内容',
     },
   };
 
@@ -369,19 +393,34 @@
     if (!(el instanceof HTMLElement)) return;
 
     if (el.dataset.i18n) {
-      el.textContent = i18nT(el.dataset.i18n);
+      const translated = i18nT(el.dataset.i18n);
+      if (el.textContent !== translated) {
+        el.textContent = translated;
+      }
     }
     if (el.dataset.i18nPlaceholder) {
-      el.setAttribute('placeholder', i18nT(el.dataset.i18nPlaceholder));
+      const translated = i18nT(el.dataset.i18nPlaceholder);
+      if (el.getAttribute('placeholder') !== translated) {
+        el.setAttribute('placeholder', translated);
+      }
     }
     if (el.dataset.i18nAriaLabel) {
-      el.setAttribute('aria-label', i18nT(el.dataset.i18nAriaLabel));
+      const translated = i18nT(el.dataset.i18nAriaLabel);
+      if (el.getAttribute('aria-label') !== translated) {
+        el.setAttribute('aria-label', translated);
+      }
     }
     if (el.dataset.i18nTitle) {
-      el.setAttribute('title', i18nT(el.dataset.i18nTitle));
+      const translated = i18nT(el.dataset.i18nTitle);
+      if (el.getAttribute('title') !== translated) {
+        el.setAttribute('title', translated);
+      }
     }
     if (el.dataset.i18nTooltip) {
-      el.setAttribute('data-tooltip', i18nT(el.dataset.i18nTooltip));
+      const translated = i18nT(el.dataset.i18nTooltip);
+      if (el.getAttribute('data-tooltip') !== translated) {
+        el.setAttribute('data-tooltip', translated);
+      }
     }
 
     const attrNames = ['aria-label', 'title', 'placeholder', 'data-tooltip'];

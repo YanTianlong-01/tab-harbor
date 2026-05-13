@@ -38,6 +38,7 @@ globalThis.chrome = {
   tabs: {
     group: async (opts) => 0,
     get: async () => ({ id: 0, groupId: -1, windowId: 0 }),
+    move: async () => {},
     ungroup: async () => {},
     query: async (opts) => opts?.groupId != null ? [] : [],
     onAttached: createEventEmitter(),
@@ -63,6 +64,7 @@ const {
   loadChromeTabGroupsSetting,
   saveChromeTabGroupsSetting,
   syncChromeTabGroups,
+  collapseChromeTabGroupsInWindow,
   syncChromeTabGroupExpansionForTab,
   resetChromeGroupState,
   isChromeTabGroupsEnabled,
@@ -180,6 +182,8 @@ test('syncChromeTabGroups creates groups when enabled', async () => {
 
   assert.equal(groupCallCount, 2);
   assert.equal(updateCallArgs.length, 2);
+  assert.equal(updateCallArgs[0].collapsed, true);
+  assert.equal(updateCallArgs[1].collapsed, true);
   assert.equal(updateCallArgs[0].color, 'grey');
   assert.equal(updateCallArgs[1].color, 'red');
   assert.equal(getChromeGroupCount(), 2);
@@ -214,6 +218,97 @@ test('syncChromeTabGroups handles tabs in different windows', async () => {
 
   // Should create 1 group for each window → 2 total chrome.tabs.group calls
   assert.equal(groupCallCount, 2);
+});
+
+test('syncChromeTabGroups reorders tabs inside a chrome group to match desired order', async () => {
+  resetChromeGroupState();
+  const moveCalls = [];
+
+  globalThis.chrome.tabs.group = async () => 901;
+  globalThis.chrome.tabs.move = async (tabId, opts) => {
+    moveCalls.push({ tabId, ...opts });
+  };
+  globalThis.chrome.tabGroups.update = async () => {};
+  globalThis.chrome.tabGroups.query = async () => [];
+  globalThis.chrome.tabs.query = async (opts) => {
+    if (opts?.groupId === 901) {
+      return [
+        { id: 2, groupId: 901, windowId: 1, index: 7 },
+        { id: 1, groupId: 901, windowId: 1, index: 8 },
+      ];
+    }
+    return [];
+  };
+
+  await saveChromeTabGroupsSetting(true);
+
+  await syncChromeTabGroups([
+    {
+      domain: 'github.com',
+      tabs: [
+        { id: 1, windowId: 1, url: 'https://github.com/1' },
+        { id: 2, windowId: 1, url: 'https://github.com/2' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(moveCalls, [
+    { tabId: 1, windowId: 1, index: 7 },
+    { tabId: 2, windowId: 1, index: 8 },
+  ]);
+});
+
+test('syncChromeTabGroups reorders grouped tabs across groups to match desired group order in a window', async () => {
+  resetChromeGroupState();
+  const moveCalls = [];
+
+  globalThis.chrome.tabs.group = async (opts) => opts.groupId ?? 0;
+  globalThis.chrome.tabs.move = async (tabId, opts) => {
+    moveCalls.push({ tabId, ...opts });
+  };
+  globalThis.chrome.tabGroups.update = async () => {};
+  globalThis.chrome.tabGroups.query = async () => [
+    { id: 501, title: 'GitHub', color: 'grey', windowId: 1 },
+    { id: 502, title: 'Bilibili', color: 'red', windowId: 1 },
+  ];
+  globalThis.chrome.tabs.query = async (opts) => {
+    if (opts?.groupId === 501) {
+      return [
+        { id: 11, groupId: 501, windowId: 1, index: 8 },
+      ];
+    }
+    if (opts?.groupId === 502) {
+      return [
+        { id: 22, groupId: 502, windowId: 1, index: 5 },
+      ];
+    }
+    if (opts?.windowId === 1) {
+      return [
+        { id: 22, windowId: 1, index: 5 },
+        { id: 11, windowId: 1, index: 8 },
+      ];
+    }
+    return [];
+  };
+
+  await saveChromeTabGroupsSetting(true);
+  await populateChromeGroupMap([
+    { virtualGroupKey: 'github.com', windowId: 1, chromeGroupId: 501 },
+    { virtualGroupKey: 'bilibili.com', windowId: 1, chromeGroupId: 502 },
+  ]);
+
+  await syncChromeTabGroups([
+    { domain: 'github.com', tabs: [{ id: 11, windowId: 1, url: 'https://github.com' }] },
+    { domain: 'bilibili.com', tabs: [{ id: 22, windowId: 1, url: 'https://bilibili.com' }] },
+  ]);
+
+  assert.deepEqual(
+    moveCalls.slice(-2),
+    [
+      { tabId: 11, windowId: 1, index: 5 },
+      { tabId: 22, windowId: 1, index: 6 },
+    ]
+  );
 });
 
 test('syncChromeTabGroups cleans up when disabled after being enabled', async () => {
@@ -448,4 +543,25 @@ test('syncChromeTabGroupExpansionForTab skips work when Chrome sync is disabled'
   await syncChromeTabGroupExpansionForTab({ groupId: 101, windowId: 1 });
 
   assert.equal(queryCount, 0);
+});
+
+test('collapseChromeTabGroupsInWindow collapses every expanded group in the target window', async () => {
+  resetChromeGroupState();
+  await saveChromeTabGroupsSetting(true);
+
+  const updateCalls = [];
+  globalThis.chrome.tabGroups.query = async () => [
+    { id: 101, windowId: 1, collapsed: false },
+    { id: 102, windowId: 1, collapsed: true },
+    { id: 103, windowId: 2, collapsed: false },
+  ];
+  globalThis.chrome.tabGroups.update = async (id, opts) => {
+    updateCalls.push({ id, ...opts });
+  };
+
+  await collapseChromeTabGroupsInWindow(1);
+
+  assert.deepEqual(updateCalls, [
+    { id: 101, collapsed: true },
+  ]);
 });

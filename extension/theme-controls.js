@@ -5,6 +5,7 @@ const {
 } = globalThis.TabHarborI18n || {};
 
 const {
+  escapeHtml: themeEscapeHtml,
   escapeHtmlAttribute: themeEscapeHtmlAttribute,
   getFallbackLabel: themeGetFallbackLabel,
   getIconSources: themeGetIconSources,
@@ -240,6 +241,7 @@ let themePreferences = {
   paletteId: 'paper',
   customBackground: '',
   surfaceOpacity: 14,
+  hitokotoEnabled: true,
 };
 
 let systemThemeMediaQuery = null;
@@ -260,6 +262,7 @@ function normalizeThemePreferences(input) {
     paletteId: VALID_THEME_PALETTES.has(rawPaletteId) ? rawPaletteId : 'paper',
     customBackground: typeof next.customBackground === 'string' ? next.customBackground : '',
     surfaceOpacity,
+    hitokotoEnabled: next.hitokotoEnabled !== false,
   };
 }
 
@@ -424,22 +427,27 @@ function hexToRgbChannels(hex) {
   return `${r} ${g} ${b}`;
 }
 
+function computeThemeOpacityVars(surfaceOpacity) {
+  return {
+    '--custom-surface-opacity': `${surfaceOpacity}%`,
+    '--custom-border-opacity': `${Math.max(8, surfaceOpacity)}%`,
+    '--custom-badge-opacity': `${Math.max(3, Math.round(surfaceOpacity * 0.28))}%`,
+    '--custom-fallback-opacity': `${Math.max(4, Math.round(surfaceOpacity * 0.36))}%`,
+  };
+}
+
 function applyThemePreferences() {
   const root = document.documentElement;
   const body = document.body;
   const theme = getResolvedThemeDefinition(themePreferences);
-  const surfaceOpacity = themePreferences.surfaceOpacity;
-  const borderOpacity = Math.max(8, surfaceOpacity);
-  const badgeOpacity = Math.max(3, Math.round(surfaceOpacity * 0.28));
-  const fallbackOpacity = Math.max(4, Math.round(surfaceOpacity * 0.36));
+  const opacityVars = computeThemeOpacityVars(themePreferences.surfaceOpacity);
 
   Object.entries(theme.vars).forEach(([name, value]) => {
     root.style.setProperty(name, value);
   });
-  root.style.setProperty('--custom-surface-opacity', `${surfaceOpacity}%`);
-  root.style.setProperty('--custom-border-opacity', `${borderOpacity}%`);
-  root.style.setProperty('--custom-badge-opacity', `${badgeOpacity}%`);
-  root.style.setProperty('--custom-fallback-opacity', `${fallbackOpacity}%`);
+  Object.entries(opacityVars).forEach(([name, value]) => {
+    root.style.setProperty(name, value);
+  });
   if (body) {
     body.classList.toggle('theme-tone-light', theme.tone === 'light');
     body.classList.toggle('theme-tone-dark', theme.tone === 'dark');
@@ -464,7 +472,6 @@ function applyThemePreferences() {
 function renderThemeMenu() {
   const trigger = document.getElementById('themeMenuTrigger');
   const modeOptions = document.getElementById('themeModeOptions');
-  const pinToggle = document.getElementById('headerPinToggle');
   const panel = document.getElementById('themeMenuPanel');
   const options = document.getElementById('themeOptions');
   const transparencyRange = document.getElementById('themeTransparencyRange');
@@ -475,15 +482,6 @@ function renderThemeMenu() {
   panel.hidden = !themeMenuOpen;
   transparencyRange.value = String(themePreferences.surfaceOpacity);
   transparencyValue.textContent = `${themePreferences.surfaceOpacity}%`;
-  if (pinToggle && typeof groupOrderState !== 'undefined') {
-    const pinTooltip = groupOrderState.pinEnabled
-      ? (themeT ? themeT('pinnedOrder') : 'Pinned order')
-      : (themeT ? themeT('pinOrder') : 'Pin order');
-    pinToggle.classList.toggle('is-active', groupOrderState.pinEnabled);
-    pinToggle.dataset.tooltip = pinTooltip;
-    pinToggle.setAttribute('aria-label', pinTooltip);
-    pinToggle.setAttribute('aria-pressed', String(groupOrderState.pinEnabled));
-  }
 
   modeOptions.innerHTML = THEME_MODE_ORDER.map(id => `
     <button
@@ -509,7 +507,7 @@ function renderThemeMenu() {
       <span class="theme-option-main">
         <span class="theme-option-swatch" aria-hidden="true"></span>
         <span>
-          <span class="theme-option-name">${family.name}</span>
+          <span class="theme-option-name">${themeEscapeHtml ? themeEscapeHtml(family.name) : family.name}</span>
         </span>
       </span>
       <span class="theme-option-check" aria-hidden="true">
@@ -1205,6 +1203,8 @@ function previewQuickShortcutOrder(clientX, clientY) {
 
 function renderQuickShortcutCard(shortcut) {
   const label = getShortcutLabel(shortcut);
+  const safeLabel = themeEscapeHtml ? themeEscapeHtml(label) : label;
+  const safeAriaLabel = themeEscapeHtmlAttribute ? themeEscapeHtmlAttribute(label) : label.replace(/"/g, '&quot;');
   const iconData = themeGetIconSources({ url: shortcut.url, title: label }, 32);
   const faviconUrl = iconData.sources[0] || '';
   const fallbackUrl = iconData.sources[1] || '';
@@ -1225,13 +1225,13 @@ function renderQuickShortcutCard(shortcut) {
 
   return `
     <div class="quick-shortcut-card" data-shortcut-id="${safeId}">
-      <button class="quick-shortcut-open" type="button" data-action="open-quick-shortcut" data-shortcut-url="${safeUrl}" aria-label="${label}" draggable="false">
+      <button class="quick-shortcut-open" type="button" data-action="open-quick-shortcut" data-shortcut-url="${safeUrl}" aria-label="${safeAriaLabel}" draggable="false">
         <span class="quick-shortcut-icon-wrap">
           ${primaryIconUrl ? `<img class="quick-shortcut-icon${customIcon.kind === 'image' ? ' quick-shortcut-icon-custom' : ''}" src="${primaryIconUrl}" alt="" draggable="false" data-fallback-src="${safeIconErrorFallback}">` : ''}
           ${glyphIcon ? `<span class="quick-shortcut-custom-glyph" aria-hidden="true">${glyphIcon}</span>` : ''}
           <span class="quick-shortcut-fallback"${primaryIconUrl || glyphIcon ? ' style="display:none"' : ''}>${fallbackLabel}</span>
         </span>
-        <span class="quick-shortcut-label">${label}</span>
+        <span class="quick-shortcut-label">${safeLabel}</span>
       </button>
       <button class="quick-shortcut-edit" type="button" data-action="edit-quick-shortcut" data-shortcut-id="${safeId}" aria-label="${themeT ? themeT('editQuickTab') : 'Edit quick tab'}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a2.25 2.25 0 1 1 3.182 3.182L10.582 17.13a4.5 4.5 0 0 1-1.897 1.13L6 19l.74-2.685a4.5 4.5 0 0 1 1.13-1.897L16.862 4.487ZM19.5 7.125 16.875 4.5" /></svg>
@@ -1999,6 +1999,25 @@ async function loadThemePreferences() {
   return themePreferences;
 }
 
+function syncPopupTheme(targetDoc) {
+  const root = targetDoc?.documentElement;
+  const body = targetDoc?.body;
+  if (!root) return;
+  const theme = getResolvedThemeDefinition(themePreferences);
+  const opacityVars = computeThemeOpacityVars(themePreferences.surfaceOpacity);
+
+  Object.entries(theme.vars).forEach(([name, value]) => {
+    root.style.setProperty(name, value);
+  });
+  Object.entries(opacityVars).forEach(([name, value]) => {
+    root.style.setProperty(name, value);
+  });
+  if (body) {
+    body.classList.toggle('theme-tone-light', theme.tone === 'light');
+    body.classList.toggle('theme-tone-dark', theme.tone === 'dark');
+  }
+}
+
 async function saveThemePreferences(nextPreferences) {
   themePreferences = normalizeThemePreferences({
     ...themePreferences,
@@ -2015,7 +2034,13 @@ globalThis.TabOutThemeControls = {
   filterRealTabs,
   getResolvedThemeDefinition,
   getResolvedTone,
+  getQuickShortcuts,
+  loadThemePreferences,
   normalizeShortcutUrl,
   normalizeQuickShortcuts,
   normalizeThemePreferences,
+  removeQuickShortcutById,
+  saveQuickShortcutOrder,
+  saveQuickShortcuts,
+  syncPopupTheme,
 };
